@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>オカズコントローラー Ver 4.6.43</title>
+    
+    <meta name="apple-mobile-web-app-title" content="Okazu-Sim">
+    <link rel="apple-touch-icon" href="icon.png">
+    
+    <title>オカズコントローラー Ver 4.6.44</title>
     <style>
         html, body { height: 100%; }
         body { 
@@ -52,7 +56,6 @@
         }
         #pad-container img { width: 100%; height: auto; display: block; pointer-events: none; }
         
-        /* 案内用ガイドスイッチ：高コントラスト・レッド版 */
         #tap-guide {
             position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%);
             width: 120px; height: 120px; background: rgba(214, 48, 49, 0.2);
@@ -101,7 +104,7 @@
     <div id="header-wrapper" style="background: #fff;">
         <div id="header">
             <div id="status" class="status-waiting" onclick="initAudio()">開始</div>
-            <div style="font-size: 0.65rem; color: #bbb;">Ver 4.6.43</div>
+            <div style="font-size: 0.65rem; color: #bbb;">Ver 4.6.44</div>
         </div>
 
         <div class="speed-control" onclick="event.stopPropagation()">
