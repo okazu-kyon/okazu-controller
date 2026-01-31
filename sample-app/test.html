@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>オカズコントローラー Ver 4.6.43</title>
+    <style>
+        html, body { height: 100%; }
+        body { 
+            font-family: "Hiragino Maru Gothic ProN", "Yu Gothic", "Meiryo", sans-serif; 
+            text-align: center; background: #ffffff; margin: 0; padding: 0; 
+            display: flex; flex-direction: column;
+            overflow: hidden; touch-action: none;
+        }
+        
+        #header {
+            background: #fff; 
+            padding: calc(10px + env(safe-area-inset-top)) 15px 5px 15px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        #status { font-size: 0.85rem; font-weight: bold; padding: 5px 14px; border-radius: 20px; min-width: 75px; cursor: pointer; }
+        .status-waiting { background: #ff7675; color: white; animation: pulse 2s infinite; }
+        .status-loading { background: #fff9db; color: #e67e22; border: 1px solid #f39c12; }
+        .status-ready { background: #ebfbee; color: #1b5e20; border: 1px solid #2e7d32; }
+
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+
+        .speed-control {
+            width: 100%; background: #fff; padding: 5px 0 12px 0; border-bottom: 1px solid #eee;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .speed-control label { font-size: 0.85rem; font-weight: 900; color: #666; }
+        #rr-slider { -webkit-appearance: none; width: 120px; height: 8px; background: #eee; border-radius: 4px; outline: none; }
+        #rr-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; background: #3498db; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+        
+        #rr-display { font-size: 1.8rem; font-weight: 900; color: #2980b9; min-width: 95px; text-align: right; display: flex; align-items: baseline; justify-content: flex-end; }
+        #rr-display small { font-size: 0.75rem; color: #555; margin-left: 2px; font-weight: bold; }
+
+        #main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: #ffffff;
+        }
+
+        #pad-container { 
+            position: relative; width: 100%; max-width: 420px; 
+            background: white; line-height: 0; box-shadow: 0 0 20px rgba(0,0,0,0.05);
+        }
+        #pad-container img { width: 100%; height: auto; display: block; pointer-events: none; }
+        
+        /* 案内用ガイドスイッチ：高コントラスト・レッド版 */
+        #tap-guide {
+            position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%);
+            width: 120px; height: 120px; background: rgba(214, 48, 49, 0.2);
+            border: 5px solid #d63031; border-radius: 50%; z-index: 100;
+            display: flex; align-items: center; justify-content: center;
+            pointer-events: auto; cursor: pointer; transition: opacity 0.5s;
+        }
+        #tap-guide::after {
+            content: "ここを\Aタッチ"; font-size: 18px; font-weight: 900; color: #d63031; white-space: pre; line-height: 1.2;
+        }
+        .guide-pulse { animation: guide-pulse-animation 1.0s infinite; }
+        @keyframes guide-pulse-animation {
+            0% { transform: translate(-50%, -50%) scale(0.9); box-shadow: 0 0 0 0 rgba(214, 48, 49, 0.7); }
+            70% { transform: translate(-50%, -50%) scale(1.1); box-shadow: 0 0 0 30px rgba(214, 48, 49, 0); }
+            100% { transform: translate(-50%, -50%) scale(0.9); box-shadow: 0 0 0 0 rgba(214, 48, 49, 0); }
+        }
+
+        .pad { 
+            position: absolute; width: 56px; height: 48px; background: rgba(255, 255, 255, 0); 
+            border: 2px solid white; border-radius: 50%; color: white; 
+            display: flex; align-items: center; justify-content: center; 
+            font-weight: bold; font-size: 18px; cursor: pointer; z-index: 10; transform: translate(-50%, -50%);
+        }
+        .pad.btn7, .pad.btn8 { width: 42px; height: 75px; }
+        .pad.btn7 { transform: translate(-50%, -50%) rotate(-15deg); }
+        .pad.btn8 { transform: translate(-50%, -50%) rotate(15deg); }
+        .pad:active { background: rgba(231, 76, 60, 0.8) !important; border-color: #ffcccc; }
+
+        .dial-container {
+            width: 100%; background: #ffffff; padding: 10px 0 calc(20px + env(safe-area-inset-bottom)) 0;
+            overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch;
+        }
+        .dial-container::-webkit-scrollbar { display: none; }
+        .dial-wrapper { display: inline-block; padding: 0 50px; }
+        .sound-btn { 
+            display: inline-block; padding: 14px 28px; margin: 0 8px;
+            font-size: 1.3rem; font-weight: bold; border: none; border-radius: 30px; 
+            background: #f8f8f8; color: #555; box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+        }
+        .sound-btn.active { background: #3498db; color: white; transform: scale(1.08); }
+    </style>
+</head>
+<body onclick="initAudio()">
+
+    <div id="header-wrapper" style="background: #fff;">
+        <div id="header">
+            <div id="status" class="status-waiting" onclick="initAudio()">開始</div>
+            <div style="font-size: 0.65rem; color: #bbb;">Ver 4.6.43</div>
+        </div>
+
+        <div class="speed-control" onclick="event.stopPropagation()">
+            <label>呼吸回数</label>
+            <input type="range" id="rr-slider" min="10" max="25" step="1" value="18">
+            <div id="rr-display"><span id="rr-val">18</span><small>回/分</small></div>
+        </div>
+    </div>
+
+    <div id="main-content">
+        <div id="pad-container">
+            <img src="body_image.jpg" alt="聴診部位">
+            <div id="tap-guide" class="guide-pulse" onclick="dismissGuide()"></div>
+
+            <div class="pad btn9" data-note="D5" style="top: 30%; left: 50%;"><span>9</span></div>
+            <div class="pad btn1" data-note="C4" style="top: 32%; left: 30%;"><span>1</span></div>
+            <div class="pad btn2" data-note="D4" style="top: 32%; left: 70%;"><span>2</span></div>
+            <div class="pad btn3" data-note="E4" style="top: 45%; left: 33%;"><span>3</span></div>
+            <div class="pad btn4" data-note="F4" style="top: 45%; left: 67%;"><span>4</span></div>
+            <div class="pad btn5" data-note="G4" style="top: 59%; left: 37%;"><span>5</span></div>
+            <div class="pad btn6" data-note="A4" style="top: 59%; left: 63%;"><span>6</span></div>
+            <div class="pad btn7" data-note="B4" style="top: 57%; left: 18%;"><span>7</span></div>
+            <div class="pad btn8" data-note="C5" style="top: 57%; left: 82%;"><span>8</span></div>
+        </div>
+    </div>
+
+    <div class="dial-container" onclick="event.stopPropagation()">
+        <div class="dial-wrapper">
+            <button class="sound-btn active" data-folder="normal">正常呼吸音</button>
+            <button class="sound-btn" data-folder="fc">間質性肺炎</button>
+            <button class="sound-btn" data-folder="left_pneumo">右気胸</button>
+            <button class="sound-btn" data-folder="right_pneumo">左気胸</button>
+            <button class="sound-btn" data-folder="asthma">喘息発作</button>
+            <button class="sound-btn" data-folder="pleuritis">胸膜炎</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <script>
+        let currentFolder = "normal";
+        let sampler;
+        let audioStarted = false;
+        let rrValue = 18;
+        let loopTimer = null;
+        let activeNote = null;
+        let activeNoteId = null;
+
+        const statusDisp = document.getElementById('status');
+        const rrSlider = document.getElementById('rr-slider');
+        const rrValDisp = document.getElementById('rr-val');
+        const tapGuide = document.getElementById('tap-guide');
+        
+        function dismissGuide() {
+            if (tapGuide) {
+                tapGuide.style.opacity = '0';
+                setTimeout(() => { if(tapGuide.parentNode) tapGuide.remove(); }, 500);
+            }
+        }
+
+        rrSlider.addEventListener('input', (e) => {
+            rrValue = parseInt(e.target.value);
+            rrValDisp.innerText = rrValue;
+            if (loopTimer && activeNote) {
+                const currentId = activeNoteId;
+                const currentNote = activeNote;
+                stopBreathLoop();
+                startBreathLoop(currentNote, currentId);
+            }
+        });
+
+        async function initAudio() {
+            if (audioStarted) return;
+            await Tone.start();
+            audioStarted = true;
+            setupSampler(currentFolder);
+        }
+
+        async function setupSampler(folder) {
+            if (sampler) sampler.dispose();
+            const urls = { "C4":"vesicular.wav","D4":"vesicular.wav","E4":"vesicular.wav","F4":"vesicular.wav","G4":"vesicular.wav","A4":"vesicular.wav","B4":"vesicular.wav","C5":"vesicular.wav","D5":"bronchial.wav" };
+            if (folder === "asthma") {
+                Object.keys(urls).forEach(k => urls[k] = (k === "D5" ? "bronchial.wav" : "wheeze.wav"));
+            } else if (folder === "fc") {
+                ["G4","A4","B4","C5"].forEach(k => urls[k] = "fine_crackles.wav");
+            } else if (folder === "pleuritis") {
+                ["C4","D4","E4","F4","G4","A4","B4","C5"].forEach(k => urls[k] = "friction_rub.wav");
+                urls["D5"] = "bronchial.wav";
+            }
+
+            updateStatus("読込中", "status-loading");
+            sampler = new Tone.Sampler({
+                urls: urls, baseUrl: `./soundsource/${folder}/`,
+                onload: () => { updateStatus("準備完了", "status-ready"); }
+            }).toDestination();
+        }
+
+        function startBreathLoop(note, id) {
+            dismissGuide();
+            if (!audioStarted || !sampler || !sampler.loaded) return;
+            activeNote = note;
+            activeNoteId = id;
+            const trigger = () => {
+                let vol = 0;
+                if (currentFolder === "left_pneumo" && [1,3,5,7].includes(id)) vol = -30;
+                if (currentFolder === "right_pneumo" && [2,4,6,8].includes(id)) vol = -30;
+                sampler.volume.value = vol;
+                sampler.triggerAttack(activeNote);
+            };
+            trigger(); 
+            loopTimer = setInterval(trigger, (60 / rrValue) * 1000);
+        }
+
+        function stopBreathLoop() {
+            if (loopTimer) { clearInterval(loopTimer); loopTimer = null; }
+            if (sampler && activeNote) { sampler.triggerRelease(activeNote); activeNote = null; activeNoteId = null; }
+        }
+
+        document.querySelectorAll('.pad').forEach(pad => {
+            const note = pad.getAttribute('data-note');
+            const id = parseInt(pad.classList[1].replace('btn', ''));
+            pad.addEventListener('touchstart', (e) => { e.preventDefault(); startBreathLoop(note, id); }, {passive: false});
+            pad.addEventListener('touchend', (e) => { e.preventDefault(); stopBreathLoop(); }, {passive: false});
+        });
+
+        document.querySelectorAll('.sound-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (!audioStarted) return;
+                document.querySelectorAll('.sound-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentFolder = btn.getAttribute('data-folder');
+                btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                setupSampler(currentFolder);
+            });
+        });
+
+        function updateStatus(text, className) {
+            statusDisp.innerText = text;
+            statusDisp.className = className;
+        }
+
+        document.addEventListener('touchstart', (e) => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
+    </script>
+</body>
+</html>
