@@ -3,11 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    
-    <meta name="apple-mobile-web-app-title" content="Okazu-Sim">
-    <link rel="apple-touch-icon" href="icon.png">
-    
-    <title>オカズコントローラー Ver 4.6.44</title>
+    <title>オカズコントローラー Ver 4.6.46</title>
     <style>
         html, body { height: 100%; }
         body { 
@@ -82,7 +78,7 @@
         .pad.btn7, .pad.btn8 { width: 42px; height: 75px; }
         .pad.btn7 { transform: translate(-50%, -50%) rotate(-15deg); }
         .pad.btn8 { transform: translate(-50%, -50%) rotate(15deg); }
-        .pad:active { background: rgba(231, 76, 60, 0.8) !important; border-color: #ffcccc; }
+        .pad.active-pad { background: rgba(231, 76, 60, 0.8) !important; border-color: #ffcccc; }
 
         .dial-container {
             width: 100%; background: #ffffff; padding: 10px 0 calc(20px + env(safe-area-inset-bottom)) 0;
@@ -101,10 +97,10 @@
 </head>
 <body onclick="initAudio()">
 
-    <div id="header-wrapper" style="background: #fff;">
+    <div id="header-wrapper">
         <div id="header">
             <div id="status" class="status-waiting" onclick="initAudio()">開始</div>
-            <div style="font-size: 0.65rem; color: #bbb;">Ver 4.6.44</div>
+            <div style="font-size: 0.65rem; color: #bbb;">Ver 4.6.46</div>
         </div>
 
         <div class="speed-control" onclick="event.stopPropagation()">
@@ -119,20 +115,20 @@
             <img src="body_image.jpg" alt="聴診部位">
             <div id="tap-guide" class="guide-pulse" onclick="dismissGuide()"></div>
 
-            <div class="pad btn9" data-note="D5" style="top: 30%; left: 50%;"><span>9</span></div>
-            <div class="pad btn1" data-note="C4" style="top: 32%; left: 30%;"><span>1</span></div>
-            <div class="pad btn2" data-note="D4" style="top: 32%; left: 70%;"><span>2</span></div>
-            <div class="pad btn3" data-note="E4" style="top: 45%; left: 33%;"><span>3</span></div>
-            <div class="pad btn4" data-note="F4" style="top: 45%; left: 67%;"><span>4</span></div>
-            <div class="pad btn5" data-note="G4" style="top: 59%; left: 37%;"><span>5</span></div>
-            <div class="pad btn6" data-note="A4" style="top: 59%; left: 63%;"><span>6</span></div>
-            <div class="pad btn7" data-note="B4" style="top: 57%; left: 18%;"><span>7</span></div>
-            <div class="pad btn8" data-note="C5" style="top: 57%; left: 82%;"><span>8</span></div>
+            <div class="pad btn9" id="pad-btn9" data-note="D5" style="top: 30%; left: 50%;"><span>9</span></div>
+            <div class="pad btn1" id="pad-btn1" data-note="C4" style="top: 32%; left: 30%;"><span>1</span></div>
+            <div class="pad btn2" id="pad-btn2" data-note="D4" style="top: 32%; left: 70%;"><span>2</span></div>
+            <div class="pad btn3" id="pad-btn3" data-note="E4" style="top: 45%; left: 33%;"><span>3</span></div>
+            <div class="pad btn4" id="pad-btn4" data-note="F4" style="top: 45%; left: 67%;"><span>4</span></div>
+            <div class="pad btn5" id="pad-btn5" data-note="G4" style="top: 59%; left: 37%;"><span>5</span></div>
+            <div class="pad btn6" id="pad-btn6" data-note="A4" style="top: 59%; left: 63%;"><span>6</span></div>
+            <div class="pad btn7" id="pad-btn7" data-note="B4" style="top: 57%; left: 18%;"><span>7</span></div>
+            <div class="pad btn8" id="pad-btn8" data-note="C5" style="top: 57%; left: 82%;"><span>8</span></div>
         </div>
     </div>
 
-    <div class="dial-container" onclick="event.stopPropagation()">
-        <div class="dial-wrapper">
+    <div class="dial-container" id="dial-container" onclick="event.stopPropagation()">
+        <div class="dial-wrapper" id="dial-wrapper">
             <button class="sound-btn active" data-folder="normal">正常呼吸音</button>
             <button class="sound-btn" data-folder="fc">間質性肺炎</button>
             <button class="sound-btn" data-folder="left_pneumo">右気胸</button>
@@ -156,6 +152,7 @@
         const rrSlider = document.getElementById('rr-slider');
         const rrValDisp = document.getElementById('rr-val');
         const tapGuide = document.getElementById('tap-guide');
+        const soundBtns = document.querySelectorAll('.sound-btn');
         
         function dismissGuide() {
             if (tapGuide) {
@@ -164,8 +161,10 @@
             }
         }
 
-        rrSlider.addEventListener('input', (e) => {
-            rrValue = parseInt(e.target.value);
+        // 呼吸回数を更新する関数
+        function updateRR(newVal) {
+            rrValue = Math.min(25, Math.max(10, newVal));
+            rrSlider.value = rrValue;
             rrValDisp.innerText = rrValue;
             if (loopTimer && activeNote) {
                 const currentId = activeNoteId;
@@ -173,6 +172,10 @@
                 stopBreathLoop();
                 startBreathLoop(currentNote, currentId);
             }
+        }
+
+        rrSlider.addEventListener('input', (e) => {
+            updateRR(parseInt(e.target.value));
         });
 
         async function initAudio() {
@@ -201,11 +204,25 @@
             }).toDestination();
         }
 
+        function switchFolderByIndex(index) {
+            if (!audioStarted) return;
+            soundBtns.forEach(b => b.classList.remove('active'));
+            const targetBtn = soundBtns[index];
+            targetBtn.classList.add('active');
+            currentFolder = targetBtn.getAttribute('data-folder');
+            targetBtn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+            setupSampler(currentFolder);
+        }
+
         function startBreathLoop(note, id) {
             dismissGuide();
             if (!audioStarted || !sampler || !sampler.loaded) return;
+            if (activeNoteId === id) return;
+            
             activeNote = note;
             activeNoteId = id;
+            document.getElementById(`pad-btn${id}`).classList.add('active-pad');
+
             const trigger = () => {
                 let vol = 0;
                 if (currentFolder === "left_pneumo" && [1,3,5,7].includes(id)) vol = -30;
@@ -219,25 +236,64 @@
 
         function stopBreathLoop() {
             if (loopTimer) { clearInterval(loopTimer); loopTimer = null; }
+            if (activeNoteId) {
+                document.getElementById(`pad-btn${activeNoteId}`).classList.remove('active-pad');
+            }
             if (sampler && activeNote) { sampler.triggerRelease(activeNote); activeNote = null; activeNoteId = null; }
         }
 
+        // --- キーボード操作 ---
+        const keyMap = {
+            "1": { note: "C4", id: 1 }, "2": { note: "D4", id: 2 }, "3": { note: "E4", id: 3 },
+            "4": { note: "F4", id: 4 }, "5": { note: "G4", id: 5 }, "6": { note: "A4", id: 6 },
+            "7": { note: "B4", id: 7 }, "8": { note: "C5", id: 8 }, "9": { note: "D5", id: 9 }
+        };
+
+        window.addEventListener('keydown', (e) => {
+            // 部位選択 (1-9)
+            if (keyMap[e.key]) {
+                startBreathLoop(keyMap[e.key].note, keyMap[e.key].id);
+                return;
+            }
+
+            // 症例切り替え (← →)
+            if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+                let currentIndex = Array.from(soundBtns).findIndex(btn => btn.classList.contains('active'));
+                if (e.key === "ArrowLeft") {
+                    currentIndex = (currentIndex - 1 + soundBtns.length) % soundBtns.length;
+                } else {
+                    currentIndex = (currentIndex + 1) % soundBtns.length;
+                }
+                switchFolderByIndex(currentIndex);
+            }
+
+            // 呼吸回数切り替え (↑ ↓)
+            if (e.key === "ArrowUp") {
+                updateRR(rrValue + 1);
+            } else if (e.key === "ArrowDown") {
+                updateRR(rrValue - 1);
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (keyMap[e.key]) stopBreathLoop();
+        });
+
+        // --- タッチ/クリック操作 ---
         document.querySelectorAll('.pad').forEach(pad => {
             const note = pad.getAttribute('data-note');
             const id = parseInt(pad.classList[1].replace('btn', ''));
             pad.addEventListener('touchstart', (e) => { e.preventDefault(); startBreathLoop(note, id); }, {passive: false});
             pad.addEventListener('touchend', (e) => { e.preventDefault(); stopBreathLoop(); }, {passive: false});
+            pad.addEventListener('mousedown', () => startBreathLoop(note, id));
+            pad.addEventListener('mouseup', () => stopBreathLoop());
+            pad.addEventListener('mouseleave', () => stopBreathLoop());
         });
 
-        document.querySelectorAll('.sound-btn').forEach(btn => {
+        soundBtns.forEach((btn, index) => {
             btn.addEventListener('click', (e) => {
                 e.preventDefault();
-                if (!audioStarted) return;
-                document.querySelectorAll('.sound-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                currentFolder = btn.getAttribute('data-folder');
-                btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-                setupSampler(currentFolder);
+                switchFolderByIndex(index);
             });
         });
 
