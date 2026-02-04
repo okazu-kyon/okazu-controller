@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>オカズコントローラー Ver 4.6.88</title>
+    <title>オカズコントローラー Ver 4.6.89</title>
     <style>
         html, body { height: 100%; }
         body { 
@@ -32,8 +32,9 @@
         }
 
         #header { background: #fff; padding: calc(10px + env(safe-area-inset-top)) 15px 5px 15px; display: flex; justify-content: space-between; align-items: center; }
-        #status { font-size: 0.85rem; font-weight: bold; padding: 5px 14px; border-radius: 20px; min-width: 75px; }
+        #status { font-size: 0.85rem; font-weight: bold; padding: 5px 14px; border-radius: 20px; min-width: 85px; }
         .status-waiting { background: #ff7675; color: white; animation: pulse 2s infinite; }
+        .status-loading { background: #ffeaa7; color: #d35400; border: 1px solid #fab1a0; }
         .status-ready { background: #ebfbee; color: #1b5e20; border: 1px solid #2e7d32; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
 
@@ -83,7 +84,7 @@
 
     <div id="header">
         <div id="status" class="status-waiting">待機中</div>
-        <div style="font-size: 0.65rem; color: #bbb;">Ver 4.6.88</div>
+        <div style="font-size: 0.65rem; color: #bbb;">Ver 4.6.89</div>
     </div>
 
     <div class="speed-control">
@@ -128,6 +129,7 @@
         const soundBtns = Array.from(document.querySelectorAll('.sound-btn'));
         const breathingGroup = document.getElementById('breathing-group');
         const rrSlider = document.getElementById('rr-slider');
+        const statusEl = document.getElementById('status');
 
         async function initAudio() {
             if (audioStarted) return;
@@ -140,8 +142,13 @@
         }
 
         function loadPlayers(folder) {
+            // ステータスを読み込み中に更新
+            statusEl.innerText = "読み込み中...";
+            statusEl.className = "status-loading";
+
             Object.values(players).forEach(p => { if(p) p.dispose(); });
             if (masterLoop) masterLoop.dispose();
+
             const paths = {
                 normal_v: `./soundsource/normal/vesicular.wav`,
                 extra_v: `./soundsource/${folder}/vesicular.wav`,
@@ -158,10 +165,14 @@
                     onload: () => {
                         loadedCount++;
                         if (loadedCount === 3) {
-                            document.getElementById('status').innerText = "準備完了";
-                            document.getElementById('status').className = "status-ready";
+                            statusEl.innerText = "準備完了";
+                            statusEl.className = "status-ready";
                             startMasterRhythm();
                         }
+                    },
+                    onerror: () => {
+                        statusEl.innerText = "読込エラー";
+                        statusEl.className = "status-waiting";
                     }
                 }).toDestination();
             });
@@ -217,9 +228,8 @@
 
             let moveDuration;
             if (currentFolder === "asthma") {
-                moveDuration = 3.2; // 0.7s + 2.5s 固定
+                moveDuration = 3.2;
             } else if (rrValue <= 18) {
-                // 18回以下のときは、1.3s吸気/1.2s呼気の合計2.5s固定
                 moveDuration = 2.5; 
             } else {
                 moveDuration = interval;
