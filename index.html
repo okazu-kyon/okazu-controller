@@ -3,16 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>オカズコントローラー Ver 4.6.89</title>
+    <title>オカズコントローラー Ver 4.6.91</title>
     <style>
-        html, body { height: 100%; }
+        html, body { 
+            height: 100%; 
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+        }
         body { 
             font-family: "Hiragino Maru Gothic ProN", "Yu Gothic", "Meiryo", sans-serif; 
             text-align: center; background: #ffffff; margin: 0; padding: 0; 
             display: flex; flex-direction: column; overflow: hidden; touch-action: none;
         }
 
-        /* 赤色パルス開始スイッチ */
         #tap-guide {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: 150px; height: 150px; background: rgba(214, 48, 49, 0.2);
@@ -32,7 +36,7 @@
         }
 
         #header { background: #fff; padding: calc(10px + env(safe-area-inset-top)) 15px 5px 15px; display: flex; justify-content: space-between; align-items: center; }
-        #status { font-size: 0.85rem; font-weight: bold; padding: 5px 14px; border-radius: 20px; min-width: 85px; }
+        #status { font-size: 0.85rem; font-weight: bold; padding: 5px 14px; border-radius: 20px; min-width: 75px; }
         .status-waiting { background: #ff7675; color: white; animation: pulse 2s infinite; }
         .status-loading { background: #ffeaa7; color: #d35400; border: 1px solid #fab1a0; }
         .status-ready { background: #ebfbee; color: #1b5e20; border: 1px solid #2e7d32; }
@@ -53,7 +57,6 @@
 
         #body-img { width: 100%; height: auto; display: block; pointer-events: none; }
 
-        /* 喘息以外の呼吸（吸気1.3s : 呼気1.2s = 52% : 48% / 合計2.5s） */
         .breathing-trigger { animation: chest-expand-all var(--move-duration) ease-in-out forwards; }
         @keyframes chest-expand-all {
             0% { transform: scale(1.0); }
@@ -61,7 +64,6 @@
             100% { transform: scale(1.0); }
         }
 
-        /* 喘息（吸気0.7s : 呼気2.5s = 21.9% : 78.1% / 合計3.2s） */
         .breathing-asthma { animation: asthma-expand 3.2s ease-in-out forwards; }
         @keyframes asthma-expand {
             0% { transform: scale(1.0); }
@@ -69,7 +71,7 @@
             100% { transform: scale(1.0); }  
         }
 
-        .pad { position: absolute; width: 13%; height: 9%; background: rgba(255, 255, 255, 0); border: 2px solid white; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1rem; cursor: pointer; z-index: 10; transform: translate(-50%, -50%); }
+        .pad { position: absolute; width: 13%; height: 9%; background: rgba(255, 255, 255, 0); border: 2px solid white; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1rem; cursor: pointer; z-index: 10; transform: translate(-50%, -50%); touch-action: none; }
         .pad.btn7, .pad.btn8 { width: 10%; height: 14%; }
         .pad.active-pad { background: rgba(231, 76, 60, 0.8) !important; border-color: #ffcccc; }
 
@@ -84,7 +86,7 @@
 
     <div id="header">
         <div id="status" class="status-waiting">待機中</div>
-        <div style="font-size: 0.65rem; color: #bbb;">Ver 4.6.89</div>
+        <div style="font-size: 0.65rem; color: #bbb;">Ver 4.6.91</div>
     </div>
 
     <div class="speed-control">
@@ -126,10 +128,15 @@
         let rrValue = 18;
         let currentFolder = "normal";
         let masterLoop = null;
+        let activePadId = null;
         const soundBtns = Array.from(document.querySelectorAll('.sound-btn'));
         const breathingGroup = document.getElementById('breathing-group');
         const rrSlider = document.getElementById('rr-slider');
         const statusEl = document.getElementById('status');
+
+        // スワイプ機能用
+        let touchStartX = 0;
+        let touchEndX = 0;
 
         async function initAudio() {
             if (audioStarted) return;
@@ -142,10 +149,8 @@
         }
 
         function loadPlayers(folder) {
-            // ステータスを読み込み中に更新
             statusEl.innerText = "読み込み中...";
             statusEl.className = "status-loading";
-
             Object.values(players).forEach(p => { if(p) p.dispose(); });
             if (masterLoop) masterLoop.dispose();
 
@@ -169,10 +174,6 @@
                             statusEl.className = "status-ready";
                             startMasterRhythm();
                         }
-                    },
-                    onerror: () => {
-                        statusEl.innerText = "読込エラー";
-                        statusEl.className = "status-waiting";
                     }
                 }).toDestination();
             });
@@ -186,11 +187,8 @@
                 Tone.Draw.schedule(() => {
                     breathingGroup.classList.remove('breathing-trigger', 'breathing-asthma');
                     void breathingGroup.offsetWidth;
-                    if (currentFolder === "asthma") {
-                        breathingGroup.classList.add('breathing-asthma');
-                    } else {
-                        breathingGroup.classList.add('breathing-trigger');
-                    }
+                    if (currentFolder === "asthma") breathingGroup.classList.add('breathing-asthma');
+                    else breathingGroup.classList.add('breathing-trigger');
                 }, time);
             }, interval).start(0);
             Tone.Transport.start();
@@ -225,38 +223,64 @@
             rrSlider.value = val;
             document.getElementById('rr-val').innerText = val;
             const interval = 60 / rrValue;
-
-            let moveDuration;
-            if (currentFolder === "asthma") {
-                moveDuration = 3.2;
-            } else if (rrValue <= 18) {
-                moveDuration = 2.5; 
-            } else {
-                moveDuration = interval;
-            }
+            let moveDuration = (currentFolder === "asthma") ? 3.2 : (rrValue <= 18 ? 2.5 : interval);
             document.documentElement.style.setProperty('--move-duration', `${moveDuration}s`);
-
             if (masterLoop) masterLoop.interval = interval;
         }
 
+        // パッド制御
         document.querySelectorAll('.pad').forEach(p => {
             const id = parseInt(p.id.replace('pad-btn', ''));
-            p.addEventListener('touchstart', (e) => { e.preventDefault(); setVolume(id, true); });
-            p.addEventListener('touchend', (e) => { e.preventDefault(); setVolume(id, false); });
-            p.addEventListener('mousedown', (e) => { e.preventDefault(); setVolume(id, true); });
-            p.addEventListener('mouseup', () => setVolume(id, false));
+            p.addEventListener('pointerdown', (e) => {
+                if (activePadId !== null) return;
+                activePadId = id;
+                setVolume(id, true);
+            });
+            const stopAction = (e) => {
+                if (activePadId === id) {
+                    setVolume(id, false);
+                    activePadId = null;
+                }
+            };
+            p.addEventListener('pointerup', stopAction);
+            p.addEventListener('pointerleave', stopAction);
+            p.addEventListener('pointercancel', stopAction);
         });
 
-        soundBtns.forEach(b => b.addEventListener('click', () => {
-            soundBtns.forEach(btn => btn.classList.remove('active'));
-            b.classList.add('active');
-            currentFolder = b.dataset.folder;
+        // 症例切替処理
+        function changeFolder(folder) {
+            currentFolder = folder;
+            soundBtns.forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.folder === folder);
+                if(btn.dataset.folder === folder) btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+            });
             updateRR(rrValue);
             if (audioStarted) loadPlayers(currentFolder);
-            b.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-        }));
+        }
 
+        soundBtns.forEach(b => b.addEventListener('click', () => changeFolder(b.dataset.folder)));
         rrSlider.addEventListener('input', (e) => updateRR(parseInt(e.target.value)));
+
+        // スワイプ検知
+        window.addEventListener('touchstart', (e) => { touchStartX = e.changedTouches[0].screenX; }, false);
+        window.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, false);
+
+        function handleSwipe() {
+            const threshold = 50;
+            const folders = soundBtns.map(btn => btn.dataset.folder);
+            let index = folders.indexOf(currentFolder);
+
+            if (touchStartX - touchEndX > threshold) { // Left swipe -> Next
+                index = (index + 1) % folders.length;
+                changeFolder(folders[index]);
+            } else if (touchEndX - touchStartX > threshold) { // Right swipe -> Prev
+                index = (index - 1 + folders.length) % folders.length;
+                changeFolder(folders[index]);
+            }
+        }
     </script>
 </body>
 </html>
