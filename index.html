@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>オカズコントローラー Ver 4.6.93</title>
+    <title>オカズコントローラー Ver 4.6.94</title>
     <style>
         html, body { 
             height: 100%; 
@@ -42,14 +42,6 @@
         .status-ready { background: #ebfbee; color: #1b5e20; border: 1px solid #2e7d32; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
 
-        /* 調整用スライダーエリア（確定後に削除可能） */
-        .debug-panel { 
-            background: #f0f7ff; padding: 8px; font-size: 0.7rem; 
-            display: flex; flex-direction: column; gap: 4px; border-bottom: 1px solid #d0e0f0;
-        }
-        .debug-row { display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .debug-panel input { width: 100px; }
-
         .speed-control { width: 100%; background: #fff; padding: 5px 0 12px 0; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: center; gap: 8px; }
         #rr-slider { -webkit-appearance: none; width: 120px; height: 8px; background: #eee; border-radius: 4px; outline: none; }
         #rr-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; background: #3498db; border-radius: 50%; border: 2px solid #fff; }
@@ -58,12 +50,12 @@
         #main-content { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #ffffff; overflow: hidden; position: relative; }
         #pad-container { position: relative; width: 100%; max-width: 420px; background: white; overflow: hidden; }
 
+        /* 指定された数値（移動1px, 膨らみ1.05）で固定 */
         #breathing-group {
             position: relative; width: 100%; line-height: 0;
             will-change: transform; transform-origin: 50% 40%;
-            /* JavaScriptで変数を制御 */
-            --y-move: -4px;
-            --x-scale: 1.04;
+            --y-fixed: -1px;
+            --x-fixed: 1.05;
         }
 
         #body-img { width: 100%; height: auto; display: block; pointer-events: none; }
@@ -73,7 +65,7 @@
         }
         @keyframes realistic-breath {
             0% { transform: scale(1.0) translateY(0px); }
-            52% { transform: scale(var(--x-scale), calc(1 + (var(--x-scale) - 1) * 0.5)) translateY(var(--y-move)); } 
+            52% { transform: scale(var(--x-fixed), calc(1 + (var(--x-fixed) - 1) * 0.5)) translateY(var(--y-fixed)); } 
             100% { transform: scale(1.0) translateY(0px); }
         }
 
@@ -82,7 +74,7 @@
         }
         @keyframes asthma-breath {
             0% { transform: scale(1.0) translateY(0px); }
-            21.9% { transform: scale(var(--x-scale), calc(1 + (var(--x-scale) - 1) * 0.5)) translateY(var(--y-move)); } 
+            21.9% { transform: scale(var(--x-fixed), calc(1 + (var(--x-fixed) - 1) * 0.5)) translateY(var(--y-fixed)); } 
             100% { transform: scale(1.0) translateY(0px); }  
         }
 
@@ -101,20 +93,7 @@
 
     <div id="header">
         <div id="status" class="status-waiting">待機中</div>
-        <div style="font-size: 0.65rem; color: #bbb;">Ver 4.6.93 (調整用)</div>
-    </div>
-
-    <div class="debug-panel">
-        <div class="debug-row">
-            <label>移動(Y)</label>
-            <input type="range" id="y-slider" min="0" max="20" value="4">
-            <span id="y-val">4px</span>
-        </div>
-        <div class="debug-row">
-            <label>膨らみ(X)</label>
-            <input type="range" id="x-slider" min="100" max="120" value="104">
-            <span id="x-val">1.04</span>
-        </div>
+        <div style="font-size: 0.65rem; color: #bbb;">Ver 4.6.94</div>
     </div>
 
     <div class="speed-control">
@@ -169,18 +148,6 @@
             document.getElementById('tap-guide').remove();
             loadPlayers(currentFolder);
         }
-
-        // 調整用スライダーのイベント
-        document.getElementById('y-slider').addEventListener('input', (e) => {
-            const val = e.target.value;
-            breathingGroup.style.setProperty('--y-move', `-${val}px`);
-            document.getElementById('y-val').innerText = `${val}px`;
-        });
-        document.getElementById('x-slider').addEventListener('input', (e) => {
-            const val = e.target.value / 100;
-            breathingGroup.style.setProperty('--x-scale', val);
-            document.getElementById('x-val').innerText = val;
-        });
 
         function loadPlayers(folder) {
             statusEl.innerText = "読み込み中...";
@@ -277,7 +244,6 @@
         soundBtns.forEach(b => b.addEventListener('click', () => changeFolder(b.dataset.folder)));
         rrSlider.addEventListener('input', (e) => updateRR(parseInt(e.target.value)));
 
-        // スワイプ
         let touchStartX = 0;
         window.addEventListener('touchstart', (e) => { touchStartX = e.changedTouches[0].screenX; }, false);
         window.addEventListener('touchend', (e) => {
