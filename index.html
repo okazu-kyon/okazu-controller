@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>オカズコントローラー Ver 4.6.94</title>
+    <title>オカズコントローラー Ver 4.6.95</title>
     <style>
         html, body { 
             height: 100%; 
@@ -50,7 +50,6 @@
         #main-content { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #ffffff; overflow: hidden; position: relative; }
         #pad-container { position: relative; width: 100%; max-width: 420px; background: white; overflow: hidden; }
 
-        /* 指定された数値（移動1px, 膨らみ1.05）で固定 */
         #breathing-group {
             position: relative; width: 100%; line-height: 0;
             will-change: transform; transform-origin: 50% 40%;
@@ -82,7 +81,10 @@
         .pad.btn7, .pad.btn8 { width: 10%; height: 14%; }
         .pad.active-pad { background: rgba(231, 76, 60, 0.8) !important; border-color: #ffcccc; }
 
-        .dial-container { width: 100%; background: #ffffff; padding: 10px 0 calc(20px + env(safe-area-inset-bottom)) 0; overflow-x: auto; white-space: nowrap; }
+        .dial-container { 
+            width: 100%; background: #ffffff; padding: 10px 0 calc(20px + env(safe-area-inset-bottom)) 0; 
+            overflow-x: auto; white-space: nowrap; scroll-behavior: smooth;
+        }
         .sound-btn { display: inline-block; padding: 14px 28px; margin: 0 8px; font-size: 1.3rem; font-weight: bold; border: none; border-radius: 30px; background: #f8f8f8; color: #555; }
         .sound-btn.active { background: #3498db; color: white; }
     </style>
@@ -93,7 +95,7 @@
 
     <div id="header">
         <div id="status" class="status-waiting">待機中</div>
-        <div style="font-size: 0.65rem; color: #bbb;">Ver 4.6.94</div>
+        <div style="font-size: 0.65rem; color: #bbb;">Ver 4.6.95</div>
     </div>
 
     <div class="speed-control">
@@ -119,7 +121,7 @@
         </div>
     </div>
 
-    <div class="dial-container">
+    <div id="dial-container" class="dial-container">
         <button class="sound-btn active" data-folder="normal">正常呼吸音</button>
         <button class="sound-btn" data-folder="fc">間質性肺炎</button>
         <button class="sound-btn" data-folder="left_pneumo">右気胸</button>
@@ -140,6 +142,7 @@
         const breathingGroup = document.getElementById('breathing-group');
         const rrSlider = document.getElementById('rr-slider');
         const statusEl = document.getElementById('status');
+        const dialContainer = document.getElementById('dial-container');
 
         async function initAudio() {
             if (audioStarted) return;
@@ -234,9 +237,17 @@
             ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => p.addEventListener(ev, stopAction));
         });
 
+        // フォルダ変更時にボタンをスクロールさせる処理
         function changeFolder(folder) {
             currentFolder = folder;
-            soundBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.folder === folder));
+            soundBtns.forEach(btn => {
+                const isActive = btn.dataset.folder === folder;
+                btn.classList.toggle('active', isActive);
+                if (isActive) {
+                    // スワイプ時でもボタンが画面中央に来るようにスクロール
+                    btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                }
+            });
             updateRR(rrValue);
             if (audioStarted) loadPlayers(currentFolder);
         }
