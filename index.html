@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>オカズコントローラー Ver 4.6.91</title>
+    <title>オカズコントローラー Ver 4.6.92</title>
     <style>
         html, body { 
             height: 100%; 
@@ -52,23 +52,27 @@
 
         #breathing-group {
             position: relative; width: 100%; line-height: 0;
-            will-change: transform; transform-origin: 50% 45%;
+            will-change: transform; transform-origin: 50% 40%;
         }
 
         #body-img { width: 100%; height: auto; display: block; pointer-events: none; }
 
-        .breathing-trigger { animation: chest-expand-all var(--move-duration) ease-in-out forwards; }
-        @keyframes chest-expand-all {
-            0% { transform: scale(1.0); }
-            52% { transform: scale(1.05); } 
-            100% { transform: scale(1.0); }
+        .breathing-trigger { 
+            animation: realistic-breath var(--move-duration) cubic-bezier(0.45, 0.05, 0.55, 0.95) forwards; 
+        }
+        @keyframes realistic-breath {
+            0% { transform: scale(1.0) translateY(0px); }
+            52% { transform: scale(1.04, 1.02) translateY(-4px); } 
+            100% { transform: scale(1.0) translateY(0px); }
         }
 
-        .breathing-asthma { animation: asthma-expand 3.2s ease-in-out forwards; }
-        @keyframes asthma-expand {
-            0% { transform: scale(1.0); }
-            21.9% { transform: scale(1.05); } 
-            100% { transform: scale(1.0); }  
+        .breathing-asthma { 
+            animation: asthma-breath 3.2s cubic-bezier(0.45, 0.05, 0.55, 0.95) forwards; 
+        }
+        @keyframes asthma-breath {
+            0% { transform: scale(1.0) translateY(0px); }
+            21.9% { transform: scale(1.04, 1.02) translateY(-4px); } 
+            100% { transform: scale(1.0) translateY(0px); }  
         }
 
         .pad { position: absolute; width: 13%; height: 9%; background: rgba(255, 255, 255, 0); border: 2px solid white; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1rem; cursor: pointer; z-index: 10; transform: translate(-50%, -50%); touch-action: none; }
@@ -86,7 +90,7 @@
 
     <div id="header">
         <div id="status" class="status-waiting">待機中</div>
-        <div style="font-size: 0.65rem; color: #bbb;">Ver 4.6.91</div>
+        <div style="font-size: 0.65rem; color: #bbb;">Ver 4.6.92</div>
     </div>
 
     <div class="speed-control">
@@ -134,7 +138,6 @@
         const rrSlider = document.getElementById('rr-slider');
         const statusEl = document.getElementById('status');
 
-        // スワイプ機能用
         let touchStartX = 0;
         let touchEndX = 0;
 
@@ -228,7 +231,6 @@
             if (masterLoop) masterLoop.interval = interval;
         }
 
-        // パッド制御
         document.querySelectorAll('.pad').forEach(p => {
             const id = parseInt(p.id.replace('pad-btn', ''));
             p.addEventListener('pointerdown', (e) => {
@@ -247,7 +249,6 @@
             p.addEventListener('pointercancel', stopAction);
         });
 
-        // 症例切替処理
         function changeFolder(folder) {
             currentFolder = folder;
             soundBtns.forEach(btn => {
@@ -261,7 +262,6 @@
         soundBtns.forEach(b => b.addEventListener('click', () => changeFolder(b.dataset.folder)));
         rrSlider.addEventListener('input', (e) => updateRR(parseInt(e.target.value)));
 
-        // スワイプ検知
         window.addEventListener('touchstart', (e) => { touchStartX = e.changedTouches[0].screenX; }, false);
         window.addEventListener('touchend', (e) => {
             touchEndX = e.changedTouches[0].screenX;
@@ -272,11 +272,10 @@
             const threshold = 50;
             const folders = soundBtns.map(btn => btn.dataset.folder);
             let index = folders.indexOf(currentFolder);
-
-            if (touchStartX - touchEndX > threshold) { // Left swipe -> Next
+            if (touchStartX - touchEndX > threshold) {
                 index = (index + 1) % folders.length;
                 changeFolder(folders[index]);
-            } else if (touchEndX - touchStartX > threshold) { // Right swipe -> Prev
+            } else if (touchEndX - touchStartX > threshold) {
                 index = (index - 1 + folders.length) % folders.length;
                 changeFolder(folders[index]);
             }
