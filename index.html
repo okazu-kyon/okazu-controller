@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>オカズコントローラー Ver 4.6.95</title>
+    <title>オカズコントローラー Ver 4.6.96</title>
     <style>
         html, body { 
             height: 100%; 
@@ -95,7 +95,7 @@
 
     <div id="header">
         <div id="status" class="status-waiting">待機中</div>
-        <div style="font-size: 0.65rem; color: #bbb;">Ver 4.6.95</div>
+        <div style="font-size: 0.65rem; color: #bbb;">Ver 4.6.96</div>
     </div>
 
     <div class="speed-control">
@@ -212,7 +212,8 @@
                     if (currentFolder === "right_pneumo" && [2,4,6,8].includes(id)) vol = -25;
                 }
                 if(target) target.volume.rampTo(vol, 0.1);
-                document.getElementById(`pad-btn${id}`).classList.add('active-pad');
+                const pad = document.getElementById(`pad-btn${id}`);
+                if(pad) pad.classList.add('active-pad');
             } else {
                 Object.values(players).forEach(p => p.volume.rampTo(-Infinity, 0.2));
                 document.querySelectorAll('.pad').forEach(p => p.classList.remove('active-pad'));
@@ -230,21 +231,12 @@
             if (masterLoop) masterLoop.interval = interval;
         }
 
-        document.querySelectorAll('.pad').forEach(p => {
-            const id = parseInt(p.id.replace('pad-btn', ''));
-            p.addEventListener('pointerdown', (e) => { if (activePadId === null) { activePadId = id; setVolume(id, true); } });
-            const stopAction = (e) => { if (activePadId === id) { setVolume(id, false); activePadId = null; } };
-            ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => p.addEventListener(ev, stopAction));
-        });
-
-        // フォルダ変更時にボタンをスクロールさせる処理
         function changeFolder(folder) {
             currentFolder = folder;
             soundBtns.forEach(btn => {
                 const isActive = btn.dataset.folder === folder;
                 btn.classList.toggle('active', isActive);
                 if (isActive) {
-                    // スワイプ時でもボタンが画面中央に来るようにスクロール
                     btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
                 }
             });
@@ -252,9 +244,18 @@
             if (audioStarted) loadPlayers(currentFolder);
         }
 
+        // タッチイベント
+        document.querySelectorAll('.pad').forEach(p => {
+            const id = parseInt(p.id.replace('pad-btn', ''));
+            p.addEventListener('pointerdown', (e) => { if (activePadId === null) { activePadId = id; setVolume(id, true); } });
+            const stopAction = (e) => { if (activePadId === id) { setVolume(id, false); activePadId = null; } };
+            ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => p.addEventListener(ev, stopAction));
+        });
+
         soundBtns.forEach(b => b.addEventListener('click', () => changeFolder(b.dataset.folder)));
         rrSlider.addEventListener('input', (e) => updateRR(parseInt(e.target.value)));
 
+        // スワイプイベント
         let touchStartX = 0;
         window.addEventListener('touchstart', (e) => { touchStartX = e.changedTouches[0].screenX; }, false);
         window.addEventListener('touchend', (e) => {
@@ -266,6 +267,39 @@
                 changeFolder(folders[index]);
             }
         }, false);
+
+        // キーボードイベント
+        window.addEventListener('keydown', (e) => {
+            // 数字キー 1-9
+            if (e.key >= '1' && e.key <= '9') {
+                const id = parseInt(e.key);
+                if (activePadId === null) {
+                    activePadId = id;
+                    setVolume(id, true);
+                }
+            }
+            // 左右キー (症例切替 + 自動スクロール)
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                const folders = soundBtns.map(btn => btn.dataset.folder);
+                let index = folders.indexOf(currentFolder);
+                if (e.key === 'ArrowRight') index = (index + 1) % folders.length;
+                else index = (index - 1 + folders.length) % folders.length;
+                changeFolder(folders[index]);
+            }
+            // 上下キー (RR増減)
+            if (e.key === 'ArrowUp') updateRR(rrValue + 1);
+            if (e.key === 'ArrowDown') updateRR(rrValue - 1);
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.key >= '1' && e.key <= '9') {
+                const id = parseInt(e.key);
+                if (activePadId === id) {
+                    setVolume(id, false);
+                    activePadId = null;
+                }
+            }
+        });
     </script>
 </body>
 </html>
