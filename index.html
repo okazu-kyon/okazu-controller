@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>オカズコントローラー Ver 4.6.97</title>
+    <title>オカズコントローラー Ver 4.6.98</title>
     <style>
         html, body { 
             height: 100%; 
@@ -42,7 +42,7 @@
         .status-ready { background: #ebfbee; color: #1b5e20; border: 1px solid #2e7d32; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
 
-        .speed-control { width: 100%; background: #fff; padding: 5px 0 12px 0; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .speed-control { width: 100%; background: #fff; padding: 5px 0 12px 0; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: center; gap: 8px; position: relative; z-index: 100; }
         #rr-slider { -webkit-appearance: none; width: 120px; height: 8px; background: #eee; border-radius: 4px; outline: none; }
         #rr-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; background: #3498db; border-radius: 50%; border: 2px solid #fff; }
         #rr-display { font-size: 1.8rem; font-weight: 900; color: #2980b9; min-width: 95px; text-align: right; }
@@ -95,10 +95,10 @@
 
     <div id="header">
         <div id="status" class="status-waiting">待機中</div>
-        <div style="font-size: 0.65rem; color: #bbb;">Ver 4.6.97</div>
+        <div style="font-size: 0.65rem; color: #bbb;">Ver 4.6.98</div>
     </div>
 
-    <div class="speed-control">
+    <div class="speed-control" id="no-touch-zone">
         <label>呼吸回数</label>
         <input type="range" id="rr-slider" min="10" max="25" step="1" value="18">
         <div id="rr-display"><span id="rr-val">18</span><small>回/分</small></div>
@@ -143,6 +143,7 @@
         const rrSlider = document.getElementById('rr-slider');
         const statusEl = document.getElementById('status');
         const dialContainer = document.getElementById('dial-container');
+        const mainContent = document.getElementById('main-content');
 
         async function initAudio() {
             if (audioStarted) return;
@@ -254,40 +255,53 @@
         soundBtns.forEach(b => b.addEventListener('click', () => changeFolder(b.dataset.folder)));
         rrSlider.addEventListener('input', (e) => updateRR(parseInt(e.target.value)));
 
-        // ドラッグ/スワイプ統合
+        // --- スワイプ・ドラッグの範囲制限ロジック ---
         let touchStartX = 0;
         let touchStartY = 0;
         let lastRR = 18;
+        let isValidArea = false;
+
+        function checkTouchArea(e) {
+            // タッチが人体画像エリアか、下の症例ボタンエリアであるかを確認
+            return e.target.closest('#main-content') || e.target.closest('#dial-container');
+        }
 
         window.addEventListener('touchstart', (e) => {
+            if (!checkTouchArea(e)) {
+                isValidArea = false;
+                return;
+            }
+            isValidArea = true;
             touchStartX = e.changedTouches[0].screenX;
             touchStartY = e.changedTouches[0].screenY;
             lastRR = rrValue;
         }, false);
 
         window.addEventListener('touchmove', (e) => {
+            if (!isValidArea) return;
+
             let diffX = e.changedTouches[0].screenX - touchStartX;
             let diffY = e.changedTouches[0].screenY - touchStartY;
             
-            // 上下ドラッグが左右より大きい場合、RRを変更
             if (Math.abs(diffY) > Math.abs(diffX) && Math.abs(diffY) > 10) {
-                // 感度調整: 15ピクセルごとに1回/分変更
                 let rrDiff = Math.floor(diffY / 15);
-                updateRR(lastRR - rrDiff); // 上にドラッグ（マイナス）で増加、下にドラッグ（プラス）で減少
+                updateRR(lastRR - rrDiff);
             }
         }, {passive: false});
 
         window.addEventListener('touchend', (e) => {
+            if (!isValidArea) return;
+
             let diffX = touchStartX - e.changedTouches[0].screenX;
             let diffY = touchStartY - e.changedTouches[0].screenY;
             
-            // 左右スワイプ判定
             if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
                 const folders = soundBtns.map(btn => btn.dataset.folder);
                 let index = folders.indexOf(currentFolder);
                 index = (diffX > 0) ? (index + 1) % folders.length : (index - 1 + folders.length) % folders.length;
                 changeFolder(folders[index]);
             }
+            isValidArea = false;
         }, false);
 
         window.addEventListener('keydown', (e) => {
