@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>オカズコントローラー Ver 4.6.96</title>
+    <title>オカズコントローラー Ver 4.6.97</title>
     <style>
         html, body { 
             height: 100%; 
@@ -95,7 +95,7 @@
 
     <div id="header">
         <div id="status" class="status-waiting">待機中</div>
-        <div style="font-size: 0.65rem; color: #bbb;">Ver 4.6.96</div>
+        <div style="font-size: 0.65rem; color: #bbb;">Ver 4.6.97</div>
     </div>
 
     <div class="speed-control">
@@ -244,7 +244,6 @@
             if (audioStarted) loadPlayers(currentFolder);
         }
 
-        // タッチイベント
         document.querySelectorAll('.pad').forEach(p => {
             const id = parseInt(p.id.replace('pad-btn', ''));
             p.addEventListener('pointerdown', (e) => { if (activePadId === null) { activePadId = id; setVolume(id, true); } });
@@ -255,38 +254,53 @@
         soundBtns.forEach(b => b.addEventListener('click', () => changeFolder(b.dataset.folder)));
         rrSlider.addEventListener('input', (e) => updateRR(parseInt(e.target.value)));
 
-        // スワイプイベント
+        // ドラッグ/スワイプ統合
         let touchStartX = 0;
-        window.addEventListener('touchstart', (e) => { touchStartX = e.changedTouches[0].screenX; }, false);
+        let touchStartY = 0;
+        let lastRR = 18;
+
+        window.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+            touchStartY = e.changedTouches[0].screenY;
+            lastRR = rrValue;
+        }, false);
+
+        window.addEventListener('touchmove', (e) => {
+            let diffX = e.changedTouches[0].screenX - touchStartX;
+            let diffY = e.changedTouches[0].screenY - touchStartY;
+            
+            // 上下ドラッグが左右より大きい場合、RRを変更
+            if (Math.abs(diffY) > Math.abs(diffX) && Math.abs(diffY) > 10) {
+                // 感度調整: 15ピクセルごとに1回/分変更
+                let rrDiff = Math.floor(diffY / 15);
+                updateRR(lastRR - rrDiff); // 上にドラッグ（マイナス）で増加、下にドラッグ（プラス）で減少
+            }
+        }, {passive: false});
+
         window.addEventListener('touchend', (e) => {
-            let diff = touchStartX - e.changedTouches[0].screenX;
-            const folders = soundBtns.map(btn => btn.dataset.folder);
-            let index = folders.indexOf(currentFolder);
-            if (Math.abs(diff) > 50) {
-                index = (diff > 0) ? (index + 1) % folders.length : (index - 1 + folders.length) % folders.length;
+            let diffX = touchStartX - e.changedTouches[0].screenX;
+            let diffY = touchStartY - e.changedTouches[0].screenY;
+            
+            // 左右スワイプ判定
+            if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
+                const folders = soundBtns.map(btn => btn.dataset.folder);
+                let index = folders.indexOf(currentFolder);
+                index = (diffX > 0) ? (index + 1) % folders.length : (index - 1 + folders.length) % folders.length;
                 changeFolder(folders[index]);
             }
         }, false);
 
-        // キーボードイベント
         window.addEventListener('keydown', (e) => {
-            // 数字キー 1-9
             if (e.key >= '1' && e.key <= '9') {
                 const id = parseInt(e.key);
-                if (activePadId === null) {
-                    activePadId = id;
-                    setVolume(id, true);
-                }
+                if (activePadId === null) { activePadId = id; setVolume(id, true); }
             }
-            // 左右キー (症例切替 + 自動スクロール)
             if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
                 const folders = soundBtns.map(btn => btn.dataset.folder);
                 let index = folders.indexOf(currentFolder);
-                if (e.key === 'ArrowRight') index = (index + 1) % folders.length;
-                else index = (index - 1 + folders.length) % folders.length;
+                index = (e.key === 'ArrowRight') ? (index + 1) % folders.length : (index - 1 + folders.length) % folders.length;
                 changeFolder(folders[index]);
             }
-            // 上下キー (RR増減)
             if (e.key === 'ArrowUp') updateRR(rrValue + 1);
             if (e.key === 'ArrowDown') updateRR(rrValue - 1);
         });
@@ -294,10 +308,7 @@
         window.addEventListener('keyup', (e) => {
             if (e.key >= '1' && e.key <= '9') {
                 const id = parseInt(e.key);
-                if (activePadId === id) {
-                    setVolume(id, false);
-                    activePadId = null;
-                }
+                if (activePadId === id) { setVolume(id, false); activePadId = null; }
             }
         });
     </script>
