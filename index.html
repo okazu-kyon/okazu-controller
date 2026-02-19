@@ -3,327 +3,250 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>オカズコントローラー Ver 4.6.98</title>
+    <title>オカズコントローラー Ver 4.6.101</title>
     <style>
-        html, body { 
-            height: 100%; 
-            -webkit-user-select: none;
-            user-select: none;
-            -webkit-touch-callout: none;
-        }
-        body { 
-            font-family: "Hiragino Maru Gothic ProN", "Yu Gothic", "Meiryo", sans-serif; 
-            text-align: center; background: #ffffff; margin: 0; padding: 0; 
-            display: flex; flex-direction: column; overflow: hidden; touch-action: none;
-        }
-
-        #tap-guide {
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 150px; height: 150px; background: rgba(214, 48, 49, 0.2);
-            border: 6px solid #d63031; border-radius: 50%; z-index: 9999;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: opacity 0.5s;
-        }
-        #tap-guide::after {
-            content: "ここを\Aタッチ"; font-size: 22px; font-weight: 900; color: #d63031; 
-            white-space: pre; line-height: 1.2; text-align: center;
-        }
+        html, body { height: 100%; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+        body { font-family: "Hiragino Maru Gothic ProN", "Yu Gothic", "Meiryo", sans-serif; text-align: center; background: #ffffff; margin: 0; padding: 0; display: flex; flex-direction: column; overflow: hidden; touch-action: none; }
+        #tap-guide { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 150px; height: 150px; background: rgba(214, 48, 49, 0.2); border: 6px solid #d63031; border-radius: 50%; z-index: 9999; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: opacity 0.5s; }
+        #tap-guide::after { content: "ここを\Aタッチ"; font-size: 22px; font-weight: 900; color: #d63031; white-space: pre; line-height: 1.2; text-align: center; }
         .guide-pulse { animation: guide-pulse-animation 1.2s infinite; }
-        @keyframes guide-pulse-animation {
-            0% { transform: translate(-50%, -50%) scale(0.9); box-shadow: 0 0 0 0 rgba(214, 48, 49, 0.7); }
-            70% { transform: translate(-50%, -50%) scale(1.1); box-shadow: 0 0 0 40px rgba(214, 48, 49, 0); }
-            100% { transform: translate(-50%, -50%) scale(0.9); box-shadow: 0 0 0 0 rgba(214, 48, 49, 0); }
-        }
-
-        #header { background: #fff; padding: calc(10px + env(safe-area-inset-top)) 15px 5px 15px; display: flex; justify-content: space-between; align-items: center; }
-        #status { font-size: 0.85rem; font-weight: bold; padding: 5px 14px; border-radius: 20px; min-width: 75px; }
+        @keyframes guide-pulse-animation { 0% { transform: translate(-50%, -50%) scale(0.9); box-shadow: 0 0 0 0 rgba(214, 48, 49, 0.7); } 70% { transform: translate(-50%, -50%) scale(1.1); box-shadow: 0 0 0 40px rgba(214, 48, 49, 0); } 100% { transform: translate(-50%, -50%) scale(0.9); box-shadow: 0 0 0 0 rgba(214, 48, 49, 0); } }
+        
+        #header { background: #fff; padding: calc(5px + env(safe-area-inset-top)) 15px 5px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; }
+        #status { font-size: 0.8rem; font-weight: bold; padding: 4px 12px; border-radius: 20px; min-width: 70px; }
         .status-waiting { background: #ff7675; color: white; animation: pulse 2s infinite; }
-        .status-loading { background: #ffeaa7; color: #d35400; border: 1px solid #fab1a0; }
-        .status-ready { background: #ebfbee; color: #1b5e20; border: 1px solid #2e7d32; }
+        .status-loading { background: #ffeaa7; color: #d35400; }
+        .status-ready { background: #ebfbee; color: #1b5e20; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
 
-        .speed-control { width: 100%; background: #fff; padding: 5px 0 12px 0; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: center; gap: 8px; position: relative; z-index: 100; }
-        #rr-slider { -webkit-appearance: none; width: 120px; height: 8px; background: #eee; border-radius: 4px; outline: none; }
-        #rr-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; background: #3498db; border-radius: 50%; border: 2px solid #fff; }
-        #rr-display { font-size: 1.8rem; font-weight: 900; color: #2980b9; min-width: 95px; text-align: right; }
+        .control-panel { background: #fdfdfd; padding: 5px 0; border-bottom: 1px solid #eee; }
+        .slider-row { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 4px 0; }
+        .slider-row label { font-size: 0.8rem; font-weight: bold; color: #666; width: 40px; }
+        input[type="range"] { -webkit-appearance: none; width: 130px; height: 6px; background: #eee; border-radius: 4px; outline: none; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; background: #3498db; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+        .val-disp { font-size: 1.2rem; font-weight: 900; color: #2980b9; min-width: 75px; text-align: left; }
 
-        #main-content { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #ffffff; overflow: hidden; position: relative; }
-        #pad-container { position: relative; width: 100%; max-width: 420px; background: white; overflow: hidden; }
+        #main-content { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; overflow: hidden; }
+        #pad-container { position: relative; width: 100%; max-width: 400px; }
+        #breathing-group { position: relative; width: 100%; line-height: 0; transform-origin: 50% 40%; --y-fixed: -1px; --x-fixed: 1.05; }
+        #body-img { width: 100%; height: auto; pointer-events: none; }
+        
+        .breathing-trigger { animation: realistic-breath var(--move-duration) cubic-bezier(0.45, 0.05, 0.55, 0.95) forwards; }
+        @keyframes realistic-breath { 0%, 100% { transform: scale(1.0) translateY(0px); } 52% { transform: scale(var(--x-fixed), calc(1 + (var(--x-fixed) - 1) * 0.5)) translateY(var(--y-fixed)); } }
+        .breathing-asthma { animation: asthma-breath 3.2s cubic-bezier(0.45, 0.05, 0.55, 0.95) forwards; }
+        @keyframes asthma-breath { 0%, 100% { transform: scale(1.0) translateY(0px); } 21.9% { transform: scale(var(--x-fixed), calc(1 + (var(--x-fixed) - 1) * 0.5)) translateY(var(--y-fixed)); } }
 
-        #breathing-group {
-            position: relative; width: 100%; line-height: 0;
-            will-change: transform; transform-origin: 50% 40%;
-            --y-fixed: -1px;
-            --x-fixed: 1.05;
-        }
+        .pad { position: absolute; width: 13%; height: 9%; background: rgba(255, 255, 255, 0); border: 2px solid white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1rem; color: white; cursor: pointer; z-index: 10; transform: translate(-50%, -50%); }
+        .active-pad { background: rgba(231, 76, 60, 0.8) !important; border-color: #ffcccc; }
 
-        #body-img { width: 100%; height: auto; display: block; pointer-events: none; }
-
-        .breathing-trigger { 
-            animation: realistic-breath var(--move-duration) cubic-bezier(0.45, 0.05, 0.55, 0.95) forwards; 
-        }
-        @keyframes realistic-breath {
-            0% { transform: scale(1.0) translateY(0px); }
-            52% { transform: scale(var(--x-fixed), calc(1 + (var(--x-fixed) - 1) * 0.5)) translateY(var(--y-fixed)); } 
-            100% { transform: scale(1.0) translateY(0px); }
-        }
-
-        .breathing-asthma { 
-            animation: asthma-breath 3.2s cubic-bezier(0.45, 0.05, 0.55, 0.95) forwards; 
-        }
-        @keyframes asthma-breath {
-            0% { transform: scale(1.0) translateY(0px); }
-            21.9% { transform: scale(var(--x-fixed), calc(1 + (var(--x-fixed) - 1) * 0.5)) translateY(var(--y-fixed)); } 
-            100% { transform: scale(1.0) translateY(0px); }  
-        }
-
-        .pad { position: absolute; width: 13%; height: 9%; background: rgba(255, 255, 255, 0); border: 2px solid white; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1rem; cursor: pointer; z-index: 10; transform: translate(-50%, -50%); touch-action: none; }
-        .pad.btn7, .pad.btn8 { width: 10%; height: 14%; }
-        .pad.active-pad { background: rgba(231, 76, 60, 0.8) !important; border-color: #ffcccc; }
-
-        .dial-container { 
-            width: 100%; background: #ffffff; padding: 10px 0 calc(20px + env(safe-area-inset-bottom)) 0; 
-            overflow-x: auto; white-space: nowrap; scroll-behavior: smooth;
-        }
-        .sound-btn { display: inline-block; padding: 14px 28px; margin: 0 8px; font-size: 1.3rem; font-weight: bold; border: none; border-radius: 30px; background: #f8f8f8; color: #555; }
-        .sound-btn.active { background: #3498db; color: white; }
+        .selector-container { background: #fff; padding: 5px 0 calc(5px + env(safe-area-inset-bottom)) 0; }
+        .scroll-row { overflow-x: auto; white-space: nowrap; padding: 8px 0; border-top: 1px solid #f0f0f0; scroll-behavior: smooth; }
+        .scroll-row::-webkit-scrollbar { display: none; }
+        .label-tag { font-size: 0.65rem; color: #999; display: block; text-align: left; padding-left: 15px; margin-bottom: -5px; }
+        .btn { display: inline-block; padding: 10px 20px; margin: 0 5px; font-size: 0.9rem; font-weight: bold; border: none; border-radius: 20px; background: #f0f0f0; color: #666; }
+        .btn.active { background: #3498db; color: white; }
+        .btn.heart-btn.active { background: #e74c3c; }
     </style>
 </head>
 <body>
-
     <div id="tap-guide" class="guide-pulse" onclick="initAudio()"></div>
-
+    
     <div id="header">
         <div id="status" class="status-waiting">待機中</div>
-        <div style="font-size: 0.65rem; color: #bbb;">Ver 4.6.98</div>
+        <div style="font-size: 0.6rem; color: #ccc;">Ver 4.6.101</div>
     </div>
 
-    <div class="speed-control" id="no-touch-zone">
-        <label>呼吸回数</label>
-        <input type="range" id="rr-slider" min="10" max="25" step="1" value="18">
-        <div id="rr-display"><span id="rr-val">18</span><small>回/分</small></div>
+    <div class="control-panel" id="no-touch-zone">
+        <div class="slider-row">
+            <label>呼吸</label>
+            <input type="range" id="rr-slider" min="10" max="25" step="1" value="18">
+            <div class="val-disp"><span id="rr-val">18</span><small>回/分</small></div>
+        </div>
+        <div class="slider-row">
+            <label>心拍</label>
+            <input type="range" id="hr-slider" min="40" max="120" step="1" value="70">
+            <div class="val-disp"><span id="hr-val">70</span><small>bpm</small></div>
+        </div>
     </div>
 
     <div id="main-content">
         <div id="pad-container">
             <div id="breathing-group">
                 <img src="body_image.jpg" alt="body" id="body-img">
-                <div class="pad btn9" id="pad-btn9" style="top: 30%; left: 50%;">9</div>
-                <div class="pad btn1" id="pad-btn1" style="top: 32%; left: 30%;">1</div>
-                <div class="pad btn2" id="pad-btn2" style="top: 32%; left: 70%;">2</div>
-                <div class="pad btn3" id="pad-btn3" style="top: 45%; left: 33%;">3</div>
-                <div class="pad btn4" id="pad-btn4" style="top: 45%; left: 67%;">4</div>
-                <div class="pad btn5" id="pad-btn5" style="top: 59%; left: 37%;">5</div>
-                <div class="pad btn6" id="pad-btn6" style="top: 59%; left: 63%;">6</div>
-                <div class="pad btn7" id="pad-btn7" style="top: 57%; left: 18%;">7</div>
-                <div class="pad btn8" id="pad-btn8" style="top: 57%; left: 82%;">8</div>
+                <div class="pad" id="pad-btn9" style="top: 30%; left: 50%;">9</div>
+                <div class="pad" id="pad-btn1" style="top: 32%; left: 30%;">1</div>
+                <div class="pad" id="pad-btn2" style="top: 32%; left: 70%;">2</div>
+                <div class="pad" id="pad-btn3" style="top: 45%; left: 33%;">3</div>
+                <div class="pad" id="pad-btn4" style="top: 45%; left: 67%;">4</div>
+                <div class="pad" id="pad-btn5" style="top: 59%; left: 37%;">5</div>
+                <div class="pad" id="pad-btn6" style="top: 59%; left: 63%;">6</div>
+                <div class="pad" id="pad-btn7" style="top: 57%; left: 18%;">7</div>
+                <div class="pad" id="pad-btn8" style="top: 57%; left: 82%;">8</div>
             </div>
         </div>
     </div>
 
-    <div id="dial-container" class="dial-container">
-        <button class="sound-btn active" data-folder="normal">正常呼吸音</button>
-        <button class="sound-btn" data-folder="fc">間質性肺炎</button>
-        <button class="sound-btn" data-folder="left_pneumo">右気胸</button>
-        <button class="sound-btn" data-folder="right_pneumo">左気胸</button>
-        <button class="sound-btn" data-folder="asthma">喘息発作</button>
-        <button class="sound-btn" data-folder="pleuritis">胸膜炎</button>
+    <div class="selector-container">
+        <span class="label-tag">呼吸音 症例</span>
+        <div id="lung-row" class="scroll-row">
+            <button class="btn lung-btn active" data-folder="normal">正常</button>
+            <button class="btn lung-btn" data-folder="fc">間質性肺炎</button>
+            <button class="btn lung-btn" data-folder="left_pneumo">右気胸</button>
+            <button class="btn lung-btn" data-folder="right_pneumo">左気胸</button>
+            <button class="btn lung-btn" data-folder="asthma">喘息</button>
+            <button class="btn lung-btn" data-folder="pleuritis">胸膜炎</button>
+        </div>
+        <span class="label-tag">心音 症例</span>
+        <div id="heart-row" class="scroll-row">
+            <button class="btn heart-btn active" data-folder="normal">正常</button>
+            <button class="btn heart-btn" data-folder="as">大動脈弁狭窄</button>
+            <button class="btn heart-btn" data-folder="ms">僧帽弁狭窄</button>
+            <button class="btn heart-btn" data-folder="mr">僧帽弁閉鎖不全</button>
+            <button class="btn heart-btn" data-folder="none">心音なし</button>
+        </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <script>
         let audioStarted = false;
-        let players = { normal_v: null, extra_v: null, bronchial: null };
-        let rrValue = 18;
-        let currentFolder = "normal";
-        let masterLoop = null;
-        let activePadId = null;
-        const soundBtns = Array.from(document.querySelectorAll('.sound-btn'));
-        const breathingGroup = document.getElementById('breathing-group');
-        const rrSlider = document.getElementById('rr-slider');
+        let players = { normal_v: null, extra_v: null, bronchial: null, heart: null };
+        let rrValue = 18, hrValue = 70;
+        let lungFolder = "normal", heartFolder = "normal";
+        let masterLoop = null, heartLoop = null, activePadId = null;
+
         const statusEl = document.getElementById('status');
-        const dialContainer = document.getElementById('dial-container');
-        const mainContent = document.getElementById('main-content');
+        const lungBtns = Array.from(document.querySelectorAll('.lung-btn'));
+        const heartBtns = Array.from(document.querySelectorAll('.heart-btn'));
 
         async function initAudio() {
             if (audioStarted) return;
             await Tone.start();
             audioStarted = true;
             document.getElementById('tap-guide').remove();
-            loadPlayers(currentFolder);
+            loadAllPlayers();
         }
 
-        function loadPlayers(folder) {
-            statusEl.innerText = "読み込み中...";
+        function loadAllPlayers() {
+            statusEl.innerText = "読込中...";
             statusEl.className = "status-loading";
-            Object.values(players).forEach(p => { if(p) p.dispose(); });
+            Object.values(players).forEach(p => p && p.dispose());
             if (masterLoop) masterLoop.dispose();
+            if (heartLoop) heartLoop.dispose();
+
             const paths = {
                 normal_v: `./soundsource/normal/vesicular.wav`,
-                extra_v: `./soundsource/${folder}/vesicular.wav`,
-                bronchial: `./soundsource/${folder}/bronchial.wav`
+                extra_v: `./soundsource/${lungFolder}/vesicular.wav`,
+                bronchial: `./soundsource/${lungFolder}/bronchial.wav`,
+                heart: heartFolder === "none" ? null : `./soundsource/heart/${heartFolder}.wav`
             };
-            if (folder === "asthma") paths.extra_v = `./soundsource/${folder}/wheeze.wav`;
-            if (folder === "fc") paths.extra_v = `./soundsource/${folder}/fine_crackles.wav`;
-            if (folder === "pleuritis") paths.extra_v = `./soundsource/${folder}/friction_rub.wav`;
+            if (lungFolder === "asthma") paths.extra_v = `./soundsource/${lungFolder}/wheeze.wav`;
+            if (lungFolder === "fc") paths.extra_v = `./soundsource/${lungFolder}/fine_crackles.wav`;
+            if (lungFolder === "pleuritis") paths.extra_v = `./soundsource/${lungFolder}/friction_rub.wav`;
 
-            let loadedCount = 0;
+            let loaded = 0, toLoad = Object.values(paths).filter(p => p).length;
             Object.keys(paths).forEach(key => {
-                players[key] = new Tone.Player({
-                    url: paths[key], loop: false, volume: -Infinity,
-                    onload: () => {
-                        loadedCount++;
-                        if (loadedCount === 3) {
-                            statusEl.innerText = "準備完了";
-                            statusEl.className = "status-ready";
-                            startMasterRhythm();
-                        }
+                if (!paths[key]) return;
+                players[key] = new Tone.Player({ url: paths[key], volume: -Infinity, onload: () => {
+                    if (++loaded === toLoad) {
+                        statusEl.innerText = "準備完了"; statusEl.className = "status-ready";
+                        startLoops();
                     }
-                }).toDestination();
+                }}).toDestination();
             });
         }
 
-        function startMasterRhythm() {
-            const interval = 60 / rrValue;
-            updateRR(rrValue);
+        function startLoops() {
             masterLoop = new Tone.Loop(time => {
-                Object.values(players).forEach(p => p.start(time));
+                ['normal_v','extra_v','bronchial'].forEach(k => players[k] && players[k].start(time));
                 Tone.Draw.schedule(() => {
-                    breathingGroup.classList.remove('breathing-trigger', 'breathing-asthma');
-                    void breathingGroup.offsetWidth;
-                    if (currentFolder === "asthma") breathingGroup.classList.add('breathing-asthma');
-                    else breathingGroup.classList.add('breathing-trigger');
+                    const bg = document.getElementById('breathing-group');
+                    bg.classList.remove('breathing-trigger', 'breathing-asthma');
+                    void bg.offsetWidth;
+                    bg.classList.add(lungFolder === "asthma" ? 'breathing-asthma' : 'breathing-trigger');
                 }, time);
-            }, interval).start(0);
+            }, 60 / rrValue).start(0);
+
+            if (players.heart) {
+                heartLoop = new Tone.Loop(time => players.heart.start(time), 60 / hrValue).start(0);
+            }
             Tone.Transport.start();
+            updateAnimations();
         }
 
         function setVolume(id, isOn) {
-            if (!audioStarted || !players.extra_v) return;
+            if (!audioStarted) return;
             if (isOn) {
-                let target; let vol = 0;
-                if (currentFolder === "fc") {
-                    if ([5, 6, 7, 8].includes(id)) target = players.extra_v;
-                    else if ([1, 2, 3, 4].includes(id)) target = players.normal_v;
-                    else if (id == 9) target = players.bronchial;
-                } else {
-                    if (id == 9) target = players.bronchial;
-                    else target = players.extra_v;
-                    if (currentFolder === "left_pneumo" && [1,3,5,7].includes(id)) vol = -25;
-                    if (currentFolder === "right_pneumo" && [2,4,6,8].includes(id)) vol = -25;
-                }
-                if(target) target.volume.rampTo(vol, 0.1);
-                const pad = document.getElementById(`pad-btn${id}`);
-                if(pad) pad.classList.add('active-pad');
+                let target = (id == 9) ? players.bronchial : players.extra_v;
+                let vol = 0;
+                if (lungFolder === "fc" && ![5,6,7,8].includes(id)) target = players.normal_v;
+                if (lungFolder === "left_pneumo" && [1,3,5,7].includes(id)) vol = -25;
+                if (lungFolder === "right_pneumo" && [2,4,6,8].includes(id)) vol = -25;
+
+                if (target) target.volume.rampTo(vol, 0.1);
+                if (players.heart) players.heart.volume.rampTo(-5, 0.1);
+                document.getElementById(`pad-btn${id}`).classList.add('active-pad');
             } else {
-                Object.values(players).forEach(p => p.volume.rampTo(-Infinity, 0.2));
+                ['normal_v','extra_v','bronchial','heart'].forEach(k => players[k] && players[k].volume.rampTo(-Infinity, 0.2));
                 document.querySelectorAll('.pad').forEach(p => p.classList.remove('active-pad'));
             }
         }
 
-        function updateRR(val) {
-            val = Math.max(10, Math.min(25, val));
-            rrValue = val;
-            rrSlider.value = val;
-            document.getElementById('rr-val').innerText = val;
+        function updateAnimations() {
             const interval = 60 / rrValue;
-            let moveDuration = (currentFolder === "asthma") ? 3.2 : (rrValue <= 18 ? 2.5 : interval);
-            document.documentElement.style.setProperty('--move-duration', `${moveDuration}s`);
-            if (masterLoop) masterLoop.interval = interval;
+            let dur = (lungFolder === "asthma") ? 3.2 : (rrValue <= 18 ? 2.5 : interval);
+            document.documentElement.style.setProperty('--move-duration', `${dur}s`);
         }
 
-        function changeFolder(folder) {
-            currentFolder = folder;
-            soundBtns.forEach(btn => {
-                const isActive = btn.dataset.folder === folder;
-                btn.classList.toggle('active', isActive);
-                if (isActive) {
-                    btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-                }
-            });
-            updateRR(rrValue);
-            if (audioStarted) loadPlayers(currentFolder);
-        }
+        // --- UI Events ---
+        document.getElementById('rr-slider').addEventListener('input', e => {
+            rrValue = parseInt(e.target.value);
+            document.getElementById('rr-val').innerText = rrValue;
+            if (masterLoop) masterLoop.interval = 60 / rrValue;
+            updateAnimations();
+        });
+
+        document.getElementById('hr-slider').addEventListener('input', e => {
+            hrValue = parseInt(e.target.value);
+            document.getElementById('hr-val').innerText = hrValue;
+            if (heartLoop) heartLoop.interval = 60 / hrValue;
+        });
+
+        lungBtns.forEach(btn => btn.addEventListener('click', () => {
+            lungFolder = btn.dataset.folder;
+            lungBtns.forEach(b => b.classList.toggle('active', b === btn));
+            btn.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+            loadAllPlayers();
+        }));
+
+        heartBtns.forEach(btn => btn.addEventListener('click', () => {
+            heartFolder = btn.dataset.folder;
+            heartBtns.forEach(b => b.classList.toggle('active', b === btn));
+            btn.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+            loadAllPlayers();
+        }));
+
+        // --- Touch Control ---
+        let tX, tY, lRR, lHR, valid = false;
+        window.addEventListener('touchstart', e => {
+            if (e.target.closest('#no-touch-zone')) return;
+            valid = true; tX = e.touches[0].screenX; tY = e.touches[0].screenY; lRR = rrValue; lHR = hrValue;
+        });
+        window.addEventListener('touchmove', e => {
+            if (!valid) return;
+            let dx = e.touches[0].screenX - tX, dy = e.touches[0].screenY - tY;
+            if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 10) {
+                rrValue = Math.max(10, Math.min(25, lRR - Math.floor(dy / 15)));
+                document.getElementById('rr-slider').value = rrValue;
+                document.getElementById('rr-val').innerText = rrValue;
+                if (masterLoop) masterLoop.interval = 60 / rrValue;
+            }
+        }, {passive:false});
 
         document.querySelectorAll('.pad').forEach(p => {
-            const id = parseInt(p.id.replace('pad-btn', ''));
-            p.addEventListener('pointerdown', (e) => { if (activePadId === null) { activePadId = id; setVolume(id, true); } });
-            const stopAction = (e) => { if (activePadId === id) { setVolume(id, false); activePadId = null; } };
-            ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => p.addEventListener(ev, stopAction));
-        });
-
-        soundBtns.forEach(b => b.addEventListener('click', () => changeFolder(b.dataset.folder)));
-        rrSlider.addEventListener('input', (e) => updateRR(parseInt(e.target.value)));
-
-        // --- スワイプ・ドラッグの範囲制限ロジック ---
-        let touchStartX = 0;
-        let touchStartY = 0;
-        let lastRR = 18;
-        let isValidArea = false;
-
-        function checkTouchArea(e) {
-            // タッチが人体画像エリアか、下の症例ボタンエリアであるかを確認
-            return e.target.closest('#main-content') || e.target.closest('#dial-container');
-        }
-
-        window.addEventListener('touchstart', (e) => {
-            if (!checkTouchArea(e)) {
-                isValidArea = false;
-                return;
-            }
-            isValidArea = true;
-            touchStartX = e.changedTouches[0].screenX;
-            touchStartY = e.changedTouches[0].screenY;
-            lastRR = rrValue;
-        }, false);
-
-        window.addEventListener('touchmove', (e) => {
-            if (!isValidArea) return;
-
-            let diffX = e.changedTouches[0].screenX - touchStartX;
-            let diffY = e.changedTouches[0].screenY - touchStartY;
-            
-            if (Math.abs(diffY) > Math.abs(diffX) && Math.abs(diffY) > 10) {
-                let rrDiff = Math.floor(diffY / 15);
-                updateRR(lastRR - rrDiff);
-            }
-        }, {passive: false});
-
-        window.addEventListener('touchend', (e) => {
-            if (!isValidArea) return;
-
-            let diffX = touchStartX - e.changedTouches[0].screenX;
-            let diffY = touchStartY - e.changedTouches[0].screenY;
-            
-            if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
-                const folders = soundBtns.map(btn => btn.dataset.folder);
-                let index = folders.indexOf(currentFolder);
-                index = (diffX > 0) ? (index + 1) % folders.length : (index - 1 + folders.length) % folders.length;
-                changeFolder(folders[index]);
-            }
-            isValidArea = false;
-        }, false);
-
-        window.addEventListener('keydown', (e) => {
-            if (e.key >= '1' && e.key <= '9') {
-                const id = parseInt(e.key);
-                if (activePadId === null) { activePadId = id; setVolume(id, true); }
-            }
-            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-                const folders = soundBtns.map(btn => btn.dataset.folder);
-                let index = folders.indexOf(currentFolder);
-                index = (e.key === 'ArrowRight') ? (index + 1) % folders.length : (index - 1 + folders.length) % folders.length;
-                changeFolder(folders[index]);
-            }
-            if (e.key === 'ArrowUp') updateRR(rrValue + 1);
-            if (e.key === 'ArrowDown') updateRR(rrValue - 1);
-        });
-
-        window.addEventListener('keyup', (e) => {
-            if (e.key >= '1' && e.key <= '9') {
-                const id = parseInt(e.key);
-                if (activePadId === id) { setVolume(id, false); activePadId = null; }
-            }
+            const id = parseInt(p.id.replace('pad-btn',''));
+            p.addEventListener('pointerdown', () => { if(!activePadId){ activePadId=id; setVolume(id,true); }});
+            const stop = () => { if(activePadId==id){ setVolume(id,false); activePadId=null; }};
+            ['pointerup','pointerleave','pointercancel'].forEach(ev => p.addEventListener(ev, stop));
         });
     </script>
 </body>
