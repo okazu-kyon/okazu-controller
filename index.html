@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>オカズコントローラー Ver 4.6.106</title>
+    <title>オカズコントローラー Ver 4.6.107</title>
     <style>
         html, body { height: 100%; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
         body { font-family: "Hiragino Maru Gothic ProN", "Yu Gothic", "Meiryo", sans-serif; text-align: center; background: #ffffff; margin: 0; padding: 0; display: flex; flex-direction: column; overflow: hidden; touch-action: none; }
+        
+        /* ガイド表示 */
         #tap-guide { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 150px; height: 150px; background: rgba(214, 48, 49, 0.2); border: 6px solid #d63031; border-radius: 50%; z-index: 9999; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         #tap-guide::after { content: "ここを\Aタッチ"; font-size: 22px; font-weight: 900; color: #d63031; white-space: pre; line-height: 1.2; text-align: center; }
         .guide-pulse { animation: guide-pulse-animation 1.2s infinite; }
@@ -19,52 +21,71 @@
         .status-ready { background: #ebfbee; color: #1b5e20; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
 
-        .control-panel { background: #fdfdfd; padding: 5px 0; border-bottom: 1px solid #eee; }
+        /* スライダーエリア（ここが境界線になる） */
+        .control-panel { 
+            background: #fff; 
+            padding: 5px 0; 
+            border-bottom: 2px solid #ddd; /* 境界線を少し強調 */
+            position: relative;
+            z-index: 100; /* 画像より上に配置 */
+        }
         .slider-row { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 2px 0; }
         .slider-row label { font-size: 0.75rem; font-weight: bold; color: #666; width: 35px; }
         input[type="range"] { -webkit-appearance: none; width: 110px; height: 6px; background: #eee; border-radius: 4px; outline: none; }
         input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; background: #3498db; border-radius: 50%; border: 2px solid #fff; }
         .val-disp { font-size: 1.1rem; font-weight: 900; color: #2980b9; min-width: 70px; text-align: left; }
 
-        #main-content { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; overflow: hidden; background: #f4f4f4; }
+        /* 人体モデル表示エリア（ここでマスクをかける） */
+        #main-content { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: flex-start; /* 上詰めに配置 */
+            align-items: center; 
+            position: relative; 
+            overflow: hidden; /* ★重要：ここからはみ出した画像は表示されない */
+            background: #fff; 
+        }
         
-        /* 枠を固定 */
         #pad-container { 
             position: relative; 
             width: 100%; 
             max-width: 420px; 
-            aspect-ratio: 3 / 4; 
-            background: white; 
-            overflow: hidden; 
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            /* 最小時の位置に合わせるための調整 */
+            margin-top: -5px; 
         }
 
-        /* 呼吸で動く画像とパッドのグループ */
         #breathing-group { 
             position: relative; 
             width: 100%; 
-            height: 100%;
-            transform-origin: 50% 40%; 
+            line-height: 0; 
+            transform-origin: 50% 40%; /* 胸を中心に膨らむ */
             will-change: transform;
-            --y-fixed: -3px; 
+            --y-fixed: -8px; /* 上方向への動きを少し強めに */
             --x-fixed: 1.06; 
         }
 
-        #body-img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+        #body-img { width: 100%; height: auto; pointer-events: none; }
         
-        /* アニメーション定義 */
+        /* アニメーション */
         .breathing-trigger { animation: realistic-breath var(--move-duration) cubic-bezier(0.45, 0.05, 0.55, 0.95) forwards; }
-        @keyframes realistic-breath { 0%, 100% { transform: scale(1.0) translateY(0px); } 52% { transform: scale(var(--x-fixed), calc(1 + (var(--x-fixed) - 1) * 0.4)) translateY(var(--y-fixed)); } }
+        @keyframes realistic-breath { 
+            0%, 100% { transform: scale(1.0) translateY(0px); } 
+            52% { transform: scale(var(--x-fixed), calc(1 + (var(--x-fixed) - 1) * 0.4)) translateY(var(--y-fixed)); } 
+        }
         
         .breathing-asthma { animation: asthma-breath 3.2s cubic-bezier(0.45, 0.05, 0.55, 0.95) forwards; }
-        @keyframes asthma-breath { 0%, 100% { transform: scale(1.0) translateY(0px); } 21.9% { transform: scale(var(--x-fixed), calc(1 + (var(--x-fixed) - 1) * 0.4)) translateY(var(--y-fixed)); } }
+        @keyframes asthma-breath { 
+            0%, 100% { transform: scale(1.0) translateY(0px); } 
+            21.9% { transform: scale(var(--x-fixed), calc(1 + (var(--x-fixed) - 1) * 0.4)) translateY(var(--y-fixed)); } 
+        }
 
+        /* パッド */
         .pad { position: absolute; width: 13%; height: 9%; background: rgba(255, 255, 255, 0); border: 2px solid white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1rem; color: white; cursor: pointer; z-index: 10; transform: translate(-50%, -50%); }
         .active-pad { background: rgba(231, 76, 60, 0.8) !important; border-color: #ffcccc; }
 
-        .selector-container { background: #fff; padding-bottom: calc(5px + env(safe-area-inset-bottom)); border-top: 1px solid #eee; }
+        /* セレクター */
+        .selector-container { background: #fff; padding-bottom: calc(5px + env(safe-area-inset-bottom)); border-top: 1px solid #eee; z-index: 100; }
         .scroll-row { overflow-x: auto; white-space: nowrap; padding: 6px 0; border-bottom: 1px solid #f9f9f9; scroll-behavior: smooth; }
         .scroll-row::-webkit-scrollbar { display: none; }
         .label-tag { font-size: 0.6rem; color: #aaa; text-align: left; padding-left: 15px; display: block; margin-top: 4px; }
@@ -75,7 +96,7 @@
 </head>
 <body>
     <div id="tap-guide" class="guide-pulse" onclick="initAudio()"></div>
-    <div id="header"><div id="status" class="status-waiting">待機中</div><div style="font-size: 0.6rem; color: #ccc;">Ver 4.6.106</div></div>
+    <div id="header"><div id="status" class="status-waiting">待機中</div><div style="font-size: 0.6rem; color: #ccc;">Ver 4.6.107</div></div>
 
     <div class="control-panel" id="no-touch-zone">
         <div class="slider-row"><label>呼吸</label><input type="range" id="rr-slider" min="10" max="25" step="1" value="18"><div class="val-disp"><span id="rr-val">18</span><small>回</small></div></div>
