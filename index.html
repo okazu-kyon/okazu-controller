@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>オカズコントローラー Ver 4.6.108</title>
+    <title>オカズコントローラー Ver 4.6.109</title>
     <style>
         html, body { height: 100%; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
         body { 
@@ -38,10 +38,9 @@
         input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; background: #3498db; border-radius: 50%; border: 2px solid #fff; }
         .val-disp { font-size: 1.1rem; font-weight: 900; color: #2980b9; min-width: 70px; text-align: left; }
 
-        /* 画像エリアの大きさを制限 */
         #main-content { 
-            flex: 0 1 auto; /* 伸びすぎないように制限 */
-            height: 60vh;   /* ブラウザ表示時に近い高さに固定 */
+            flex: 0 1 auto; 
+            height: 60vh; 
             display: flex; 
             flex-direction: column; 
             justify-content: flex-start;
@@ -85,14 +84,13 @@
         .pad { position: absolute; width: 13%; height: 9%; background: rgba(255, 255, 255, 0); border: 2px solid white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1rem; color: white; cursor: pointer; z-index: 10; transform: translate(-50%, -50%); }
         .active-pad { background: rgba(231, 76, 60, 0.8) !important; border-color: #ffcccc; }
 
-        /* セレクターと余白の制御 */
         .selector-container { 
             background: #fff; 
             padding-bottom: env(safe-area-inset-bottom);
             border-top: 1px solid #eee; 
             z-index: 100;
             flex-shrink: 0;
-            margin-bottom: auto; /* これにより下に余白ができる */
+            margin-bottom: auto; 
         }
         .scroll-row { overflow-x: auto; white-space: nowrap; padding: 6px 0; border-bottom: 1px solid #f9f9f9; scroll-behavior: smooth; }
         .scroll-row::-webkit-scrollbar { display: none; }
@@ -101,13 +99,12 @@
         .btn.active { background: #3498db; color: white; }
         .btn.heart-btn.active { background: #e74c3c; }
 
-        /* 全体レイアウト調整用のスペーサー */
         .bottom-filler { flex-grow: 1; background: #fff; }
     </style>
 </head>
 <body>
     <div id="tap-guide" class="guide-pulse" onclick="initAudio()"></div>
-    <div id="header"><div id="status" class="status-waiting">待機中</div><div style="font-size: 0.6rem; color: #ccc;">Ver 4.6.108</div></div>
+    <div id="header"><div id="status" class="status-waiting">待機中</div><div style="font-size: 0.6rem; color: #ccc;">Ver 4.6.109</div></div>
 
     <div class="control-panel" id="no-touch-zone">
         <div class="slider-row"><label>呼吸</label><input type="range" id="rr-slider" min="10" max="25" step="1" value="18"><div class="val-disp"><span id="rr-val">18</span><small>回</small></div></div>
@@ -145,9 +142,9 @@
         <div id="heart-row" class="scroll-row">
             <button class="btn heart-btn active" data-folder="none">なし</button>
             <button class="btn heart-btn" data-folder="normal">正常心音</button>
-            <button class="btn heart-btn" data-folder="as">AS</button>
-            <button class="btn heart-btn" data-folder="ms">MS</button>
-            <button class="btn heart-btn" data-folder="mr">MR</button>
+            <button class="btn heart-btn" data-folder="as">大動脈弁狭窄症</button>
+            <button class="btn heart-btn" data-folder="ms">僧帽弁狭窄症</button>
+            <button class="btn heart-btn" data-folder="mr">僧帽弁閉鎖不全症</button>
         </div>
     </div>
     <div class="bottom-filler"></div>
