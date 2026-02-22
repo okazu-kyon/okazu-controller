@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>オカズコントローラー Ver 4.6.109</title>
+    <title>オカズコントローラー Ver 4.6.110</title>
     <style>
         html, body { height: 100%; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
         body { 
@@ -104,7 +104,7 @@
 </head>
 <body>
     <div id="tap-guide" class="guide-pulse" onclick="initAudio()"></div>
-    <div id="header"><div id="status" class="status-waiting">待機中</div><div style="font-size: 0.6rem; color: #ccc;">Ver 4.6.109</div></div>
+    <div id="header"><div id="status" class="status-waiting">待機中</div><div style="font-size: 0.6rem; color: #ccc;">Ver 4.6.110</div></div>
 
     <div class="control-panel" id="no-touch-zone">
         <div class="slider-row"><label>呼吸</label><input type="range" id="rr-slider" min="10" max="25" step="1" value="18"><div class="val-disp"><span id="rr-val">18</span><small>回</small></div></div>
@@ -131,6 +131,7 @@
     <div class="selector-container">
         <span class="label-tag">呼吸音症例</span>
         <div id="lung-row" class="scroll-row">
+            <button class="btn lung-btn" data-folder="none">なし</button>
             <button class="btn lung-btn active" data-folder="normal">正常呼吸音</button>
             <button class="btn lung-btn" data-folder="fc">間質性肺炎</button>
             <button class="btn lung-btn" data-folder="left_pneumo">右気胸</button>
@@ -170,6 +171,13 @@
             status.innerText = "読込中..."; status.className = "status-loading";
             ['normal_v','extra_v','bronchial'].forEach(k => players[k] && players[k].dispose());
             if (masterLoop) masterLoop.dispose();
+
+            if (lungFolder === "none") {
+                status.innerText = "準備完了"; status.className = "status-ready";
+                startLungLoop();
+                loadHeartSound();
+                return;
+            }
 
             const paths = {
                 normal_v: `./soundsource/normal/vesicular.wav`,
@@ -216,12 +224,14 @@
         function setVolume(id, isOn) {
             if (!audioStarted) return;
             if (isOn) {
-                let target = (id == 9) ? players.bronchial : players.extra_v;
-                let vol = 0;
-                if (lungFolder === "fc" && ![5,6,7,8].includes(id)) target = players.normal_v;
-                if (lungFolder === "left_pneumo" && [1,3,5,7].includes(id)) vol = -25;
-                if (lungFolder === "right_pneumo" && [2,4,6,8].includes(id)) vol = -25;
-                if (target) target.volume.rampTo(vol, 0.1);
+                if (lungFolder !== "none") {
+                    let target = (id == 9) ? players.bronchial : players.extra_v;
+                    let vol = 0;
+                    if (lungFolder === "fc" && ![5,6,7,8].includes(id)) target = players.normal_v;
+                    if (lungFolder === "left_pneumo" && [1,3,5,7].includes(id)) vol = -25;
+                    if (lungFolder === "right_pneumo" && [2,4,6,8].includes(id)) vol = -25;
+                    if (target) target.volume.rampTo(vol, 0.1);
+                }
                 if (players.heart) players.heart.volume.rampTo(-5, 0.1);
                 document.getElementById(`pad-btn${id}`).classList.add('active-pad');
             } else {
