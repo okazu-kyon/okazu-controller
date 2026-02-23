@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>オカズコントローラー Ver 4.6.118</title>
+    <title>オカズコントローラー Ver 4.6.119</title>
     <style>
         html, body { height: 100%; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
         body { 
@@ -113,7 +113,7 @@
 </head>
 <body>
     <div id="tap-guide" class="guide-pulse" onclick="initAudio()"></div>
-    <div id="header"><div id="status" class="status-waiting">待機中</div><div style="font-size: 0.6rem; color: #ccc;">Ver 4.6.118</div></div>
+    <div id="header"><div id="status" class="status-waiting">待機中</div><div style="font-size: 0.6rem; color: #ccc;">Ver 4.6.119</div></div>
 
     <div class="control-panel">
         <div class="slider-row">
@@ -175,6 +175,16 @@
         let lungFolder = "normal", heartFolder = "normal";
         let masterLoop = null, heartLoop = null, activePadId = null;
         let lungMuted = false, heartMuted = false;
+
+        // --- ダブルタップ防止ロジック ---
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function (event) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault(); // 300ms以内のタップ（ダブルタップ）を無効化
+            }
+            lastTouchEnd = now;
+        }, { passive: false });
 
         async function initAudio() {
             if (audioStarted) return;
@@ -300,8 +310,14 @@
 
         document.querySelectorAll('.pad').forEach(p => {
             const id = parseInt(p.id.replace('pad-btn',''));
-            p.addEventListener('pointerdown', () => { if(!activePadId){ activePadId=id; setVolume(id,true); }});
-            const stop = () => { if(activePadId==id){ setVolume(id,false); activePadId=null; }};
+            p.addEventListener('pointerdown', (e) => { 
+                e.preventDefault(); 
+                if(!activePadId){ activePadId=id; setVolume(id,true); }
+            });
+            const stop = (e) => { 
+                e.preventDefault();
+                if(activePadId==id){ setVolume(id,false); activePadId=null; }
+            };
             ['pointerup','pointerleave','pointercancel'].forEach(ev => p.addEventListener(ev, stop));
         });
     </script>
