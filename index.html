@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>オカズコントローラー Ver 4.6.117</title>
+    <title>オカズコントローラー Ver 4.6.118</title>
     <style>
         html, body { height: 100%; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
         body { 
@@ -42,7 +42,6 @@
             width: 40px; height: 40px; border: none; 
             background: none; cursor: pointer;
             padding: 0; display: flex; align-items: center; justify-content: center;
-            /* ここから追加：タップ時の四角を消す対策 */
             -webkit-tap-highlight-color: transparent;
             outline: none;
         }
@@ -105,7 +104,7 @@
         .scroll-row { overflow-x: auto; white-space: nowrap; padding: 6px 0; border-bottom: 1px solid #f9f9f9; scroll-behavior: smooth; }
         .scroll-row::-webkit-scrollbar { display: none; }
         .label-tag { font-size: 0.6rem; color: #aaa; text-align: left; padding-left: 15px; display: block; margin-top: 4px; }
-        .btn { display: inline-block; padding: 10px 18px; margin: 0 5px; font-size: 0.9rem; font-weight: bold; border: none; border-radius: 20px; background: #f0f0f0; color: #666; }
+        .btn { display: inline-block; padding: 10px 18px; margin: 0 5px; font-size: 0.9rem; font-weight: bold; border: none; border-radius: 20px; background: #f0f0f0; color: #666; -webkit-tap-highlight-color: transparent; }
         .btn.active { background: #3498db; color: white; }
         .btn.heart-btn.active { background: #e74c3c; }
 
@@ -114,7 +113,7 @@
 </head>
 <body>
     <div id="tap-guide" class="guide-pulse" onclick="initAudio()"></div>
-    <div id="header"><div id="status" class="status-waiting">待機中</div><div style="font-size: 0.6rem; color: #ccc;">Ver 4.6.117</div></div>
+    <div id="header"><div id="status" class="status-waiting">待機中</div><div style="font-size: 0.6rem; color: #ccc;">Ver 4.6.118</div></div>
 
     <div class="control-panel">
         <div class="slider-row">
@@ -257,6 +256,10 @@
             document.documentElement.style.setProperty('--move-duration', `${dur}s`);
         }
 
+        function scrollToCenter(element) {
+            element.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        }
+
         document.getElementById('rr-slider').addEventListener('input', e => {
             rrValue = parseInt(e.target.value); document.getElementById('rr-val').innerText = rrValue;
             if (masterLoop) masterLoop.interval = 60/rrValue; updateAnimations();
@@ -286,11 +289,13 @@
             lungFolder = btn.dataset.folder;
             document.querySelectorAll('.lung-btn').forEach(b => b.classList.toggle('active', b === btn));
             loadLungSounds();
+            scrollToCenter(btn);
         }));
         document.querySelectorAll('.heart-btn').forEach(btn => btn.addEventListener('click', () => {
             heartFolder = btn.dataset.folder;
             document.querySelectorAll('.heart-btn').forEach(b => b.classList.toggle('active', b === btn));
             loadHeartSound();
+            scrollToCenter(btn);
         }));
 
         document.querySelectorAll('.pad').forEach(p => {
