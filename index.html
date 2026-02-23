@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>オカズコントローラー Ver 4.6.113</title>
+    <title>オカズコントローラー Ver 4.6.117</title>
     <style>
         html, body { height: 100%; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
         body { 
@@ -42,6 +42,9 @@
             width: 40px; height: 40px; border: none; 
             background: none; cursor: pointer;
             padding: 0; display: flex; align-items: center; justify-content: center;
+            /* ここから追加：タップ時の四角を消す対策 */
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
         }
         .mute-btn img { width: 100%; height: 100%; object-fit: contain; }
 
@@ -111,7 +114,7 @@
 </head>
 <body>
     <div id="tap-guide" class="guide-pulse" onclick="initAudio()"></div>
-    <div id="header"><div id="status" class="status-waiting">待機中</div><div style="font-size: 0.6rem; color: #ccc;">Ver 4.6.113</div></div>
+    <div id="header"><div id="status" class="status-waiting">待機中</div><div style="font-size: 0.6rem; color: #ccc;">Ver 4.6.117</div></div>
 
     <div class="control-panel">
         <div class="slider-row">
