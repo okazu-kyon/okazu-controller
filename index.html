@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>オカズコントローラー Ver 4.6.124</title>
+    <title>オカズコントローラー Ver 4.6.125</title>
     <style>
         /* 全要素に対して長押しメニューと選択、拡大動作を禁止 */
         * {
@@ -129,7 +129,7 @@
 </head>
 <body oncontextmenu="return false;">
     <div id="tap-guide" class="guide-pulse" onclick="initAudio()"></div>
-    <div id="header"><div id="status" class="status-waiting">待機中</div><div style="font-size: 0.6rem; color: #ccc;">Ver 4.6.124</div></div>
+    <div id="header"><div id="status" class="status-waiting">待機中</div><div style="font-size: 0.6rem; color: #ccc;">Ver 4.6.125</div></div>
 
     <div class="control-panel">
         <div class="slider-row">
@@ -188,6 +188,7 @@
     <script>
         let audioStarted = false;
         let players = { normal_v: null, extra_v: null, bronchial: null, heart: null };
+        let clickSynth = null;
         let rrValue = 18, hrValue = 70;
         let lungFolder = "normal", heartFolder = "normal";
         let masterLoop = null, heartLoop = null, activePadId = null;
@@ -209,17 +210,26 @@
             lastTouchEnd = now;
         }, { passive: false });
 
-        // 触覚フィードバック
-        function triggerHaptic() {
-            if (window.navigator && window.navigator.vibrate) {
-                window.navigator.vibrate(15);
-            }
+        // クリック音（フィードバック用）
+        function triggerClickSound() {
+            if (!audioStarted || !clickSynth) return;
+            // 短く鋭い音を合成
+            clickSynth.triggerAttackRelease("C6", "32n", undefined, 0.4);
         }
 
         async function initAudio() {
             if (audioStarted) return;
             await Tone.start();
             audioStarted = true;
+            
+            // フィードバック用シンセの設定
+            clickSynth = new Tone.MembraneSynth({
+                pitchDecay: 0.005,
+                octaves: 2,
+                envelope: { attack: 0.001, decay: 0.05, sustain: 0, release: 0.05 }
+            }).toDestination();
+            clickSynth.volume.value = -6;
+
             document.getElementById('tap-guide').remove();
             loadLungSounds();
         }
@@ -323,28 +333,28 @@
         });
 
         document.getElementById('lung-mute').addEventListener('click', function() {
-            triggerHaptic();
+            triggerClickSound();
             lungVolumeState = (lungVolumeState + 1) % 4;
             document.getElementById('lung-mute-img').src = volIcons[lungVolumeState];
             if (activePadId) setVolume(activePadId, true);
         });
 
         document.getElementById('heart-mute').addEventListener('click', function() {
-            triggerHaptic();
+            triggerClickSound();
             heartVolumeState = (heartVolumeState + 1) % 4;
             document.getElementById('heart-mute-img').src = volIcons[heartVolumeState];
             if (activePadId) setVolume(activePadId, true);
         });
 
         document.querySelectorAll('.lung-btn').forEach(btn => btn.addEventListener('click', () => {
-            triggerHaptic();
+            triggerClickSound();
             lungFolder = btn.dataset.folder;
             document.querySelectorAll('.lung-btn').forEach(b => b.classList.toggle('active', b === btn));
             loadLungSounds();
             scrollToCenter(btn);
         }));
         document.querySelectorAll('.heart-btn').forEach(btn => btn.addEventListener('click', () => {
-            triggerHaptic();
+            triggerClickSound();
             heartFolder = btn.dataset.folder;
             document.querySelectorAll('.heart-btn').forEach(b => b.classList.toggle('active', b === btn));
             loadHeartSound();
