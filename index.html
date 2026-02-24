@@ -3,13 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>オカズコントローラー Ver 4.6.119</title>
+    <title>オカズコントローラー Ver 4.6.120</title>
     <style>
-        html, body { height: 100%; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+        /* 全要素に対して長押しメニューと選択、拡大動作を禁止 */
+        * {
+            -webkit-touch-callout: none !important;
+            -webkit-user-select: none !important;
+            user-select: none !important;
+            -webkit-tap-highlight-color: transparent !important;
+        }
+
+        html, body { 
+            height: 100%; 
+            margin: 0; 
+            padding: 0; 
+            overflow: hidden; 
+            touch-action: none; /* ブラウザ標準のズーム・スクロールを完全無効化 */
+        }
+
         body { 
             font-family: "Hiragino Maru Gothic ProN", "Yu Gothic", "Meiryo", sans-serif; 
-            text-align: center; background: #ffffff; margin: 0; padding: 0; 
-            display: flex; flex-direction: column; overflow: hidden; touch-action: none;
+            text-align: center; 
+            background: #ffffff; 
+            display: flex; 
+            flex-direction: column; 
         }
         
         #tap-guide { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 150px; height: 150px; background: rgba(214, 48, 49, 0.2); border: 6px solid #d63031; border-radius: 50%; z-index: 9999; display: flex; align-items: center; justify-content: center; cursor: pointer; }
@@ -34,7 +51,7 @@
         }
         .slider-row { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 2px 0; }
         .slider-row label { font-size: 0.75rem; font-weight: bold; color: #666; width: 35px; }
-        input[type="range"] { -webkit-appearance: none; width: 110px; height: 6px; background: #eee; border-radius: 4px; outline: none; }
+        input[type="range"] { -webkit-appearance: none; width: 110px; height: 6px; background: #eee; border-radius: 4px; outline: none; touch-action: pan-x; }
         input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; background: #3498db; border-radius: 50%; border: 2px solid #fff; }
         .val-disp { font-size: 1.1rem; font-weight: 900; color: #2980b9; min-width: 65px; text-align: left; }
         
@@ -42,10 +59,9 @@
             width: 40px; height: 40px; border: none; 
             background: none; cursor: pointer;
             padding: 0; display: flex; align-items: center; justify-content: center;
-            -webkit-tap-highlight-color: transparent;
             outline: none;
         }
-        .mute-btn img { width: 100%; height: 100%; object-fit: contain; }
+        .mute-btn img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
 
         #main-content { 
             flex: 0 1 auto; 
@@ -101,19 +117,19 @@
             flex-shrink: 0;
             margin-bottom: auto; 
         }
-        .scroll-row { overflow-x: auto; white-space: nowrap; padding: 6px 0; border-bottom: 1px solid #f9f9f9; scroll-behavior: smooth; }
+        .scroll-row { overflow-x: auto; white-space: nowrap; padding: 6px 0; border-bottom: 1px solid #f9f9f9; scroll-behavior: smooth; touch-action: pan-x; }
         .scroll-row::-webkit-scrollbar { display: none; }
         .label-tag { font-size: 0.6rem; color: #aaa; text-align: left; padding-left: 15px; display: block; margin-top: 4px; }
-        .btn { display: inline-block; padding: 10px 18px; margin: 0 5px; font-size: 0.9rem; font-weight: bold; border: none; border-radius: 20px; background: #f0f0f0; color: #666; -webkit-tap-highlight-color: transparent; }
+        .btn { display: inline-block; padding: 10px 18px; margin: 0 5px; font-size: 0.9rem; font-weight: bold; border: none; border-radius: 20px; background: #f0f0f0; color: #666; }
         .btn.active { background: #3498db; color: white; }
         .btn.heart-btn.active { background: #e74c3c; }
 
         .bottom-filler { flex-grow: 1; background: #fff; }
     </style>
 </head>
-<body>
+<body oncontextmenu="return false;">
     <div id="tap-guide" class="guide-pulse" onclick="initAudio()"></div>
-    <div id="header"><div id="status" class="status-waiting">待機中</div><div style="font-size: 0.6rem; color: #ccc;">Ver 4.6.119</div></div>
+    <div id="header"><div id="status" class="status-waiting">待機中</div><div style="font-size: 0.6rem; color: #ccc;">Ver 4.6.120</div></div>
 
     <div class="control-panel">
         <div class="slider-row">
@@ -176,13 +192,15 @@
         let masterLoop = null, heartLoop = null, activePadId = null;
         let lungMuted = false, heartMuted = false;
 
-        // --- ダブルタップ防止ロジック ---
+        // --- 強力なズーム・拡大鏡・ダブルタップ防止 ---
         let lastTouchEnd = 0;
-        document.addEventListener('touchend', function (event) {
-            const now = (new Date()).getTime();
-            if (now - lastTouchEnd <= 300) {
-                event.preventDefault(); // 300ms以内のタップ（ダブルタップ）を無効化
-            }
+        document.addEventListener('touchstart', (e) => {
+            if (e.touches.length > 1) e.preventDefault(); // マルチタッチ禁止
+        }, { passive: false });
+
+        document.addEventListener('touchend', (e) => {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 300) e.preventDefault(); // ダブルタップズーム禁止
             lastTouchEnd = now;
         }, { passive: false });
 
@@ -244,6 +262,7 @@
         function setVolume(id, isOn) {
             if (!audioStarted) return;
             if (isOn) {
+                // 呼吸音の制御
                 if (!lungMuted) {
                     let target = (id == 9) ? players.bronchial : players.extra_v;
                     let vol = 0;
@@ -252,7 +271,12 @@
                     if (lungFolder === "right_pneumo" && [2,4,6,8].includes(id)) vol = -25;
                     if (target) target.volume.rampTo(vol, 0.1);
                 }
-                if (!heartMuted && players.heart) players.heart.volume.rampTo(-5, 0.1);
+                // 心音の制御：パッド 4 と 6 の時だけ鳴らす
+                if (!heartMuted && players.heart && (id === 4 || id === 6)) {
+                    players.heart.volume.rampTo(-5, 0.1);
+                } else if (players.heart) {
+                    players.heart.volume.rampTo(-Infinity, 0.1);
+                }
                 document.getElementById(`pad-btn${id}`).classList.add('active-pad');
             } else {
                 ['normal_v','extra_v','bronchial','heart'].forEach(k => players[k] && players[k].volume.rampTo(-Infinity, 0.2));
