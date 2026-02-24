@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>オカズコントローラー Ver 4.6.122</title>
+    <title>オカズコントローラー Ver 4.6.124</title>
     <style>
         /* 全要素に対して長押しメニューと選択、拡大動作を禁止 */
         * {
@@ -129,7 +129,7 @@
 </head>
 <body oncontextmenu="return false;">
     <div id="tap-guide" class="guide-pulse" onclick="initAudio()"></div>
-    <div id="header"><div id="status" class="status-waiting">待機中</div><div style="font-size: 0.6rem; color: #ccc;">Ver 4.6.122</div></div>
+    <div id="header"><div id="status" class="status-waiting">待機中</div><div style="font-size: 0.6rem; color: #ccc;">Ver 4.6.124</div></div>
 
     <div class="control-panel">
         <div class="slider-row">
@@ -192,13 +192,12 @@
         let lungFolder = "normal", heartFolder = "normal";
         let masterLoop = null, heartLoop = null, activePadId = null;
         
-        // 音量レベル設定 (0: 大100%, 1: ミュート0%, 2: 小30%, 3: 中60%)
         let lungVolumeState = 0;
         let heartVolumeState = 0;
-        const volLevels = [0, -Infinity, -10.5, -4.4]; // デシベル換算
+        const volLevels = [0, -Infinity, -10.5, -4.4];
         const volIcons = ["vol_on.png", "vol_off.png", "vol_low.png", "vol_mid.png"];
 
-        // --- 強力なズーム・拡大鏡・ダブルタップ防止 ---
+        // 強力な拡大防止
         let lastTouchEnd = 0;
         document.addEventListener('touchstart', (e) => {
             if (e.touches.length > 1) e.preventDefault();
@@ -209,6 +208,13 @@
             if (now - lastTouchEnd <= 300) e.preventDefault();
             lastTouchEnd = now;
         }, { passive: false });
+
+        // 触覚フィードバック
+        function triggerHaptic() {
+            if (window.navigator && window.navigator.vibrate) {
+                window.navigator.vibrate(15);
+            }
+        }
 
         async function initAudio() {
             if (audioStarted) return;
@@ -273,23 +279,17 @@
         function setVolume(id, isOn) {
             if (!audioStarted) return;
             if (isOn) {
-                // 呼吸音の制御
                 let lungVol = volLevels[lungVolumeState];
-                if (lungVolumeState !== 1) { // ミュートでなければ
+                if (lungVolumeState !== 1) {
                     let target = (id == 9) ? players.bronchial : players.extra_v;
                     let baseGain = (lungFolder === "left_pneumo" && [1,3,5,7].includes(id)) ? -25 : 
                                    (lungFolder === "right_pneumo" && [2,4,6,8].includes(id)) ? -25 : 0;
-                    
                     if (lungFolder === "fc" && ![5,6,7,8].includes(id)) target = players.normal_v;
-                    
                     if (target) target.volume.rampTo(lungVol + baseGain, 0.1);
-                    // 他のプレイヤーはミュートのままにする
                     ['normal_v','extra_v','bronchial'].forEach(k => {
                         if (players[k] && players[k] !== target) players[k].volume.rampTo(-Infinity, 0.1);
                     });
                 }
-                
-                // 心音の制御
                 let heartVol = volLevels[heartVolumeState];
                 if (heartVolumeState !== 1 && players.heart && (id === 4 || id === 6)) {
                     players.heart.volume.rampTo(heartVol - 5, 0.1);
@@ -322,27 +322,29 @@
             if (heartLoop) heartLoop.interval = 60/hrValue;
         });
 
-        // 呼吸音量切り替え (大→ミュート→小→中→大)
         document.getElementById('lung-mute').addEventListener('click', function() {
+            triggerHaptic();
             lungVolumeState = (lungVolumeState + 1) % 4;
             document.getElementById('lung-mute-img').src = volIcons[lungVolumeState];
             if (activePadId) setVolume(activePadId, true);
         });
 
-        // 心音音量切り替え (大→ミュート→小→中→大)
         document.getElementById('heart-mute').addEventListener('click', function() {
+            triggerHaptic();
             heartVolumeState = (heartVolumeState + 1) % 4;
             document.getElementById('heart-mute-img').src = volIcons[heartVolumeState];
             if (activePadId) setVolume(activePadId, true);
         });
 
         document.querySelectorAll('.lung-btn').forEach(btn => btn.addEventListener('click', () => {
+            triggerHaptic();
             lungFolder = btn.dataset.folder;
             document.querySelectorAll('.lung-btn').forEach(b => b.classList.toggle('active', b === btn));
             loadLungSounds();
             scrollToCenter(btn);
         }));
         document.querySelectorAll('.heart-btn').forEach(btn => btn.addEventListener('click', () => {
+            triggerHaptic();
             heartFolder = btn.dataset.folder;
             document.querySelectorAll('.heart-btn').forEach(b => b.classList.toggle('active', b === btn));
             loadHeartSound();
