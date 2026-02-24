@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>オカズコントローラー Ver 4.6.120</title>
+    <title>オカズコントローラー Ver 4.6.121</title>
     <style>
         /* 全要素に対して長押しメニューと選択、拡大動作を禁止 */
         * {
@@ -18,7 +18,7 @@
             margin: 0; 
             padding: 0; 
             overflow: hidden; 
-            touch-action: none; /* ブラウザ標準のズーム・スクロールを完全無効化 */
+            touch-action: none; 
         }
 
         body { 
@@ -129,7 +129,7 @@
 </head>
 <body oncontextmenu="return false;">
     <div id="tap-guide" class="guide-pulse" onclick="initAudio()"></div>
-    <div id="header"><div id="status" class="status-waiting">待機中</div><div style="font-size: 0.6rem; color: #ccc;">Ver 4.6.120</div></div>
+    <div id="header"><div id="status" class="status-waiting">待機中</div><div style="font-size: 0.6rem; color: #ccc;">Ver 4.6.121</div></div>
 
     <div class="control-panel">
         <div class="slider-row">
@@ -177,6 +177,7 @@
         <div id="heart-row" class="scroll-row">
             <button class="btn heart-btn active" data-folder="normal">正常心音</button>
             <button class="btn heart-btn" data-folder="as">大動脈弁狭窄症</button>
+            <button class="btn heart-btn" data-folder="ar">大動脈弁閉鎖不全症</button>
             <button class="btn heart-btn" data-folder="ms">僧帽弁狭窄症</button>
             <button class="btn heart-btn" data-folder="mr">僧帽弁閉鎖不全症</button>
         </div>
@@ -195,12 +196,12 @@
         // --- 強力なズーム・拡大鏡・ダブルタップ防止 ---
         let lastTouchEnd = 0;
         document.addEventListener('touchstart', (e) => {
-            if (e.touches.length > 1) e.preventDefault(); // マルチタッチ禁止
+            if (e.touches.length > 1) e.preventDefault();
         }, { passive: false });
 
         document.addEventListener('touchend', (e) => {
             const now = Date.now();
-            if (now - lastTouchEnd <= 300) e.preventDefault(); // ダブルタップズーム禁止
+            if (now - lastTouchEnd <= 300) e.preventDefault();
             lastTouchEnd = now;
         }, { passive: false });
 
@@ -229,9 +230,12 @@
 
             let loaded = 0;
             Object.keys(paths).forEach(key => {
-                players[key] = new Tone.Player({ url: paths[key], volume: -Infinity, onload: () => {
-                    if (++loaded === 3) { status.innerText = "準備完了"; status.className = "status-ready"; startLungLoop(); }
-                }}).toDestination();
+                players[key] = new Tone.Player({ 
+                    url: paths[key], 
+                    volume: -Infinity, 
+                    onload: () => { if (++loaded === 3) { status.innerText = "準備完了"; status.className = "status-ready"; startLungLoop(); }},
+                    onerror: (e) => console.error(`Lung sound error [${key}]:`, e)
+                }).toDestination();
             });
             loadHeartSound();
         }
@@ -240,8 +244,10 @@
             if (players.heart) players.heart.dispose();
             if (heartLoop) heartLoop.dispose();
             players.heart = new Tone.Player({
-                url: `./soundsource/heart/${heartFolder}.wav`, volume: -Infinity,
-                onload: () => { heartLoop = new Tone.Loop(time => players.heart.start(time), 60/hrValue).start(0); }
+                url: `./soundsource/heart/${heartFolder}.wav`, 
+                volume: -Infinity,
+                onload: () => { heartLoop = new Tone.Loop(time => players.heart.start(time), 60/hrValue).start(0); },
+                onerror: (e) => console.error(`Heart sound error [${heartFolder}]:`, e)
             }).toDestination();
         }
 
@@ -262,7 +268,6 @@
         function setVolume(id, isOn) {
             if (!audioStarted) return;
             if (isOn) {
-                // 呼吸音の制御
                 if (!lungMuted) {
                     let target = (id == 9) ? players.bronchial : players.extra_v;
                     let vol = 0;
@@ -271,7 +276,6 @@
                     if (lungFolder === "right_pneumo" && [2,4,6,8].includes(id)) vol = -25;
                     if (target) target.volume.rampTo(vol, 0.1);
                 }
-                // 心音の制御：パッド 4 と 6 の時だけ鳴らす
                 if (!heartMuted && players.heart && (id === 4 || id === 6)) {
                     players.heart.volume.rampTo(-5, 0.1);
                 } else if (players.heart) {
