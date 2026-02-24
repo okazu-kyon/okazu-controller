@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="オカズコントローラー">
 
-    <title>オカズコントローラー Ver 4.6.127</title>
+    <title>オカズコントローラー Ver 4.6.128</title>
     <style>
         /* 全要素に対して長押しメニューと選択、拡大動作を禁止 */
         * {
@@ -41,7 +41,7 @@
         @keyframes guide-pulse-animation { 0% { transform: translate(-50%, -50%) scale(0.9); box-shadow: 0 0 0 0 rgba(214, 48, 49, 0.7); } 70% { transform: translate(-50%, -50%) scale(1.1); box-shadow: 0 0 0 40px rgba(214, 48, 49, 0); } 100% { transform: translate(-50%, -50%) scale(0.9); box-shadow: 0 0 0 0 rgba(214, 48, 49, 0); } }
         
         #header { background: #fff; padding: calc(5px + env(safe-area-inset-top)) 15px 2px 15px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
-        #header-right { display: flex; align-items: center; gap: 10px; }
+        #header-right { display: flex; align-items: center; gap: 8px; }
         #status { font-size: 0.8rem; font-weight: bold; padding: 4px 12px; border-radius: 20px; min-width: 70px; }
         .status-waiting { background: #ff7675; color: white; animation: pulse 2s infinite; }
         .status-loading { background: #ffeaa7; color: #d35400; }
@@ -49,20 +49,17 @@
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
 
         #reload-btn {
-            background: #f0f0f0;
+            background: #e3f2fd; /* 淡い青 */
+            color: #1976d2;      /* 濃い青 */
             border: none;
-            border-radius: 50%;
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.1rem;
+            font-size: 0.8rem;
+            font-weight: bold;
+            padding: 4px 14px;
+            border-radius: 20px;
             cursor: pointer;
-            color: #666;
-            transition: background 0.2s;
+            transition: background 0.2s, transform 0.1s;
         }
-        #reload-btn:active { background: #ddd; }
+        #reload-btn:active { background: #bbdefb; transform: scale(0.95); }
 
         .control-panel { 
             background: #fff; 
@@ -155,8 +152,8 @@
     <div id="header">
         <div id="status" class="status-waiting">待機中</div>
         <div id="header-right">
-            <button id="reload-btn" onclick="location.reload();">🔄</button>
-            <div style="font-size: 0.6rem; color: #ccc;">Ver 4.6.127</div>
+            <button id="reload-btn" onclick="handleReload();">更新</button>
+            <div style="font-size: 0.6rem; color: #ccc;">Ver 4.6.128</div>
         </div>
     </div>
 
@@ -243,6 +240,15 @@
         function triggerClickSound() {
             if (!audioStarted || !clickSynth) return;
             clickSynth.triggerAttackRelease("C6", "32n", undefined, 0.4);
+        }
+
+        // 更新ボタン用処理
+        function handleReload() {
+            if (audioStarted) triggerClickSound();
+            // 音が鳴るわずかな時間を待ってからリロード
+            setTimeout(() => {
+                location.reload();
+            }, 100);
         }
 
         async function initAudio() {
