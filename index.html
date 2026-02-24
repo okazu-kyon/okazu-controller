@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="オカズコントローラー">
 
-    <title>オカズコントローラー Ver 4.6.129</title>
+    <title>オカズコントローラー Ver 4.6.130</title>
     <style>
         /* 全要素に対して長押しメニューと選択、拡大動作を禁止 */
         * {
@@ -48,7 +48,7 @@
         .status-ready { background: #ebfbee; color: #1b5e20; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
 
-        /* 更新ボタン：ステータス欄に合わせたデザイン */
+        /* 更新ボタン */
         #reload-btn {
             background: #e3f2fd; 
             color: #1976d2;      
@@ -83,14 +83,14 @@
             outline: none;
             position: relative;
         }
-        .mute-btn img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+        .mute-btn img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; display: block; }
         
-        /* 代替CSSアイコン（画像がない場合用） */
+        /* PC/代替用アイコン */
         .fallback-icon {
             display: none;
             font-size: 1.2rem;
             color: #1976d2;
-            background: #e3f2fd;
+            background: #f8f9fa;
             width: 32px;
             height: 32px;
             border-radius: 50%;
@@ -169,7 +169,7 @@
         <div id="status" class="status-waiting">待機中</div>
         <div id="header-right">
             <button id="reload-btn" onclick="handleReload();">更新</button>
-            <div style="font-size: 0.6rem; color: #ccc;">Ver 4.6.129</div>
+            <div style="font-size: 0.6rem; color: #ccc;">Ver 4.6.130</div>
         </div>
     </div>
 
@@ -179,7 +179,7 @@
             <input type="range" id="rr-slider" min="10" max="25" step="1" value="18">
             <div class="val-disp"><span id="rr-val">18</span><small>回</small></div>
             <button id="lung-mute" class="mute-btn">
-                <img src="vol_on.png" id="lung-mute-img" onerror="handleImgError(this)">
+                <img src="vol_on.png" id="lung-mute-img">
                 <div class="fallback-icon">🔊</div>
             </button>
         </div>
@@ -188,7 +188,7 @@
             <input type="range" id="hr-slider" min="40" max="120" step="1" value="70">
             <div class="val-disp"><span id="hr-val">70</span><small>bpm</small></div>
             <button id="heart-mute" class="mute-btn">
-                <img src="vol_on.png" id="heart-mute-img" onerror="handleImgError(this)">
+                <img src="vol_on.png" id="heart-mute-img">
                 <div class="fallback-icon">🔊</div>
             </button>
         </div>
@@ -247,14 +247,20 @@
         const volIcons = ["vol_on.png", "vol_off.png", "vol_low.png", "vol_mid.png"];
         const fallbackIcons = ["🔊", "🔇", "🔈", "🔉"];
 
-        // 画像読み込みエラー時の処理
-        function handleImgError(img) {
-            img.style.display = 'none';
-            const fallback = img.nextElementSibling;
-            if (fallback && fallback.classList.contains('fallback-icon')) {
-                fallback.style.display = 'flex';
-            }
+        // デバイス判別：iPhone/iPad等以外はPCとみなして最初から代替アイコンを表示
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+        function setupIcons() {
+            document.querySelectorAll('.mute-btn').forEach(btn => {
+                const img = btn.querySelector('img');
+                const fallback = btn.querySelector('.fallback-icon');
+                if (!isIOS) {
+                    img.style.display = 'none';
+                    fallback.style.display = 'flex';
+                }
+            });
         }
+        setupIcons();
 
         // 強力な拡大防止
         let lastTouchEnd = 0;
@@ -396,8 +402,9 @@
             triggerClickSound();
             lungVolumeState = (lungVolumeState + 1) % 4;
             const img = document.getElementById('lung-mute-img');
+            const fallback = img.nextElementSibling;
             img.src = volIcons[lungVolumeState];
-            img.nextElementSibling.innerText = fallbackIcons[lungVolumeState];
+            fallback.innerText = fallbackIcons[lungVolumeState];
             if (activePadId) setVolume(activePadId, true);
         });
 
@@ -405,8 +412,9 @@
             triggerClickSound();
             heartVolumeState = (heartVolumeState + 1) % 4;
             const img = document.getElementById('heart-mute-img');
+            const fallback = img.nextElementSibling;
             img.src = volIcons[heartVolumeState];
-            img.nextElementSibling.innerText = fallbackIcons[heartVolumeState];
+            fallback.innerText = fallbackIcons[heartVolumeState];
             if (activePadId) setVolume(activePadId, true);
         });
 
