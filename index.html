@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="オカズコントローラー">
 
-    <title>オカズコントローラー Ver 4.6.147</title>
+    <title>オカズコントローラー Ver 4.6.148</title>
     <style>
         * {
             -webkit-touch-callout: none !important;
@@ -76,7 +76,7 @@
             flex: 1; display: flex; flex-direction: column; overflow-y: auto; -webkit-overflow-scrolling: touch; 
             transition: opacity 0.3s ease, transform 0.3s ease;
         }
-        .hidden { display: none !important; }
+        .hidden { display: none !important; opacity: 0; }
 
         .control-panel { background: #fff; padding: 2px 0; border-bottom: 2px solid #ddd; flex-shrink: 0; position: relative; z-index: 900; }
         .slider-row { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0; }
@@ -89,12 +89,11 @@
 
         #main-content { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; background: #fff; position: relative; z-index: 100; }
         
-        /* スマホでも確実に下部をカットするための比率固定 */
         #pad-container { 
             position: relative; 
             width: 100%; 
             max-width: 420px; 
-            aspect-ratio: 1 / 1.0; /* 1:1に固定することで、縦長の画像の下部を強制カット */
+            aspect-ratio: 1 / 1.0; 
             overflow: hidden; 
         }
         
@@ -204,7 +203,7 @@
         <div class="bbs-content">
             <div id="bbs-list"></div>
         </div>
-        <div id="footer-ver">オカズコントローラー Ver 4.6.147</div>
+        <div id="footer-ver">オカズコントローラー Ver 4.6.148</div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
@@ -220,16 +219,33 @@
         const volLevels = [0, -Infinity, -10.5, -4.4];
         const volIcons = ["vol_on.png", "vol_off.png", "vol_low.png", "vol_mid.png"];
 
+        // フェード演出付きのビュー切り替え
         function switchView(viewName) {
             triggerClickSound();
+            const main = document.getElementById('main-view');
+            const header = document.getElementById('header');
+            const bbs = document.getElementById('bbs-view');
+
             if (viewName === 'bbs') {
-                document.getElementById('main-view').classList.add('hidden');
-                document.getElementById('header').classList.add('hidden');
-                document.getElementById('bbs-view').classList.remove('hidden');
+                main.style.opacity = '0';
+                header.style.opacity = '0';
+                setTimeout(() => {
+                    main.classList.add('hidden');
+                    header.classList.add('hidden');
+                    bbs.classList.remove('hidden');
+                    setTimeout(() => { bbs.style.opacity = '1'; }, 50);
+                }, 300);
             } else {
-                document.getElementById('bbs-view').classList.add('hidden');
-                document.getElementById('header').classList.remove('hidden');
-                document.getElementById('main-view').classList.remove('hidden');
+                bbs.style.opacity = '0';
+                setTimeout(() => {
+                    bbs.classList.add('hidden');
+                    main.classList.remove('hidden');
+                    header.classList.remove('hidden');
+                    setTimeout(() => { 
+                        main.style.opacity = '1'; 
+                        header.style.opacity = '1'; 
+                    }, 50);
+                }, 300);
             }
         }
 
@@ -239,8 +255,15 @@
             await Tone.start();
             audioStarted = true;
             setTimeout(() => { document.getElementById('tap-guide').style.display = 'none'; }, 600);
-            clickSynth = new Tone.MembraneSynth({ envelope: { attack: 0.001, decay: 0.05, sustain: 0, release: 0.05 } }).toDestination();
-            clickSynth.volume.value = -6;
+            
+            // 以前の心地よい音色設定 (FMSynthベース)
+            clickSynth = new Tone.FMSynth({
+                modulationIndex: 2,
+                envelope: { attack: 0.001, decay: 0.1, sustain: 0.01, release: 0.1 },
+                modulation: { type: "square" }
+            }).toDestination();
+            clickSynth.volume.value = -12;
+            
             loadLungSounds();
             fetchPosts();
         }
@@ -317,7 +340,7 @@
             document.documentElement.style.setProperty('--move-duration', `${dur}s`);
         }
 
-        function triggerClickSound() { if (audioStarted && clickSynth) clickSynth.triggerAttackRelease("C6", "32n", undefined, 0.4); }
+        function triggerClickSound() { if (audioStarted && clickSynth) clickSynth.triggerAttackRelease("C7", "32n"); }
 
         document.getElementById('rr-slider').addEventListener('input', e => { rrValue = parseInt(e.target.value); document.getElementById('rr-val').innerText = rrValue; if (masterLoop) masterLoop.interval = 60/rrValue; updateAnimations(); });
         document.getElementById('hr-slider').addEventListener('input', e => { hrValue = parseInt(e.target.value); document.getElementById('hr-val').innerText = hrValue; if (heartLoop) heartLoop.interval = 60/hrValue; });
