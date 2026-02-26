@@ -9,13 +9,14 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="オカズコントローラー">
 
-    <title>オカズコントローラー Ver 4.6.141</title>
+    <title>オカズコントローラー Ver 4.6.143</title>
     <style>
         * {
             -webkit-touch-callout: none !important;
             -webkit-user-select: none !important;
             user-select: none !important;
             -webkit-tap-highlight-color: transparent !important;
+            touch-action: manipulation;
         }
 
         input[type="text"], textarea {
@@ -49,7 +50,7 @@
             #orientation-alert { display: flex; }
         }
         
-        /* ガイドのフェードアウト - z-indexを最優先に */
+        /* ガイド */
         #tap-guide { 
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             background: rgba(255,255,255,0.9); z-index: 20000; 
@@ -63,74 +64,60 @@
         .guide-circle::after { content: "ここを\Aタッチ"; font-size: 22px; font-weight: 900; color: #d63031; white-space: pre; line-height: 1.2; text-align: center; }
         @keyframes guide-pulse-animation { 0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(214, 48, 49, 0.7); } 70% { transform: scale(1.1); box-shadow: 0 0 0 40px rgba(214, 48, 49, 0); } 100% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(214, 48, 49, 0); } }
         
-        #header { background: #fff; padding: calc(8px + env(safe-area-inset-top)) 15px 5px 15px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; border-bottom: 1px solid #f0f0f0; position: relative; z-index: 1000; transition: opacity 0.3s ease; }
+        /* 余白を削減(圧縮) */
+        #header { background: #fff; padding: calc(4px + env(safe-area-inset-top)) 15px 4px 15px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; border-bottom: 1px solid #f0f0f0; position: relative; z-index: 1000; }
         #header-right { display: flex; align-items: center; gap: 6px; }
-        #status { font-size: 0.7rem; font-weight: bold; padding: 4px 10px; border-radius: 20px; min-width: 60px; }
-        .status-waiting { background: #ff7675; color: white; animation: pulse 2s infinite; }
+        #status { font-size: 0.65rem; font-weight: bold; padding: 3px 8px; border-radius: 20px; min-width: 55px; }
+        .status-waiting { background: #ff7675; color: white; }
         .status-loading { background: #ffeaa7; color: #d35400; }
         .status-ready { background: #ebfbee; color: #1b5e20; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+        .nav-btn { background: #f0f0f0; border: none; border-radius: 10px; padding: 4px 8px; font-size: 0.65rem; font-weight: bold; color: #666; }
 
-        .nav-btn { background: #f0f0f0; border: none; border-radius: 12px; padding: 5px 10px; font-size: 0.7rem; font-weight: bold; color: #666; cursor: pointer; }
-
-        .view-container { 
-            flex: 1; display: flex; flex-direction: column; overflow-y: auto; -webkit-overflow-scrolling: touch; 
-            transition: opacity 0.3s ease, transform 0.3s ease;
-        }
+        .view-container { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
         .hidden { display: none !important; }
-        .view-invisible { opacity: 0 !important; }
 
-        .control-panel { background: #fff; padding: 5px 0; border-bottom: 2px solid #ddd; flex-shrink: 0; position: relative; z-index: 900; }
-        .slider-row { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 2px 0; }
-        .slider-row label { font-size: 0.75rem; font-weight: bold; color: #666; width: 35px; }
-        input[type="range"] { -webkit-appearance: none; width: 110px; height: 6px; background: #eee; border-radius: 4px; outline: none; touch-action: pan-x; }
-        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; background: #3498db; border-radius: 50%; border: 2px solid #fff; }
-        .val-disp { font-size: 1.1rem; font-weight: 900; color: #2980b9; min-width: 65px; text-align: left; }
-        .mute-btn { width: 40px; height: 40px; border: none; background: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .mute-btn img { width: 100%; height: 100%; object-fit: contain; }
+        /* スライダーエリアの圧縮 */
+        .control-panel { background: #fff; padding: 2px 0; border-bottom: 2px solid #ddd; flex-shrink: 0; position: relative; z-index: 900; }
+        .slider-row { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 1px 0; }
+        .slider-row label { font-size: 0.7rem; font-weight: bold; color: #666; width: 30px; }
+        input[type="range"] { -webkit-appearance: none; width: 100px; height: 5px; background: #eee; border-radius: 4px; outline: none; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; background: #3498db; border-radius: 50%; border: 2px solid #fff; }
+        .val-disp { font-size: 1.0rem; font-weight: 900; color: #2980b9; min-width: 60px; text-align: left; }
+        .mute-btn { width: 34px; height: 34px; border: none; background: none; }
 
-        #main-content { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; background: #fff; position: relative; z-index: 100; }
-        #pad-container { position: relative; width: 100%; max-width: 420px; }
-        #breathing-group { position: relative; width: 100%; line-height: 0; transform-origin: 50% 40%; will-change: transform; --y-fixed: -8px; --x-fixed: 1.06; }
-        #body-img { width: 100%; height: auto; pointer-events: none; }
+        /* 人体モデルの最大高さを制限してボトムを確保 */
+        #main-content { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fff; position: relative; z-index: 100; min-height: 0; }
+        #pad-container { position: relative; width: 100%; max-width: 420px; height: 100%; display: flex; align-items: center; justify-content: center; }
+        #breathing-group { position: relative; width: auto; height: 100%; max-height: 55vh; aspect-ratio: 3/4; line-height: 0; transform-origin: 50% 40%; will-change: transform; --y-fixed: -8px; --x-fixed: 1.06; }
+        #body-img { height: 100%; width: auto; pointer-events: none; }
+        
         .breathing-trigger { animation: realistic-breath var(--move-duration) cubic-bezier(0.45, 0.05, 0.55, 0.95) forwards; }
         @keyframes realistic-breath { 0%, 100% { transform: scale(1.0) translateY(0px); } 52% { transform: scale(var(--x-fixed), calc(1 + (var(--x-fixed) - 1) * 0.4)) translateY(var(--y-fixed)); } }
-        .breathing-asthma { animation: asthma-breath 3.2s cubic-bezier(0.45, 0.05, 0.55, 0.95) forwards; }
-        @keyframes asthma-breath { 0%, 100% { transform: scale(1.0) translateY(0px); } 21.9% { transform: scale(var(--x-fixed), calc(1 + (var(--x-fixed) - 1) * 0.4)) translateY(var(--y-fixed)); } }
 
-        .pad { position: absolute; width: 13%; height: 9%; background: rgba(255, 255, 255, 0); border: 2px solid white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1rem; color: white; cursor: pointer; z-index: 1010; transform: translate(-50%, -50%); }
+        .pad { position: absolute; width: 14%; height: 10.5%; background: rgba(255, 255, 255, 0); border: 2px solid white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.0rem; color: white; z-index: 1010; transform: translate(-50%, -50%); }
         .active-pad { background: rgba(231, 76, 60, 0.8) !important; border-color: #ffcccc; }
 
-        .selector-container { background: #fff; padding-bottom: 20px; border-top: 1px solid #eee; flex-shrink: 0; position: relative; z-index: 900; }
-        .scroll-row { overflow-x: auto; white-space: nowrap; padding: 6px 0; scroll-behavior: smooth; touch-action: pan-x; }
-        .scroll-row::-webkit-scrollbar { display: none; }
-        .label-tag { font-size: 0.6rem; color: #aaa; text-align: left; padding-left: 15px; display: block; margin-top: 4px; }
-        .btn { display: inline-block; padding: 10px 18px; margin: 0 5px; font-size: 0.9rem; font-weight: bold; border: none; border-radius: 20px; background: #f0f0f0; color: #666; }
+        /* 下部セレクターの圧縮 */
+        .selector-container { background: #fff; padding-bottom: calc(5px + env(safe-area-inset-bottom)); border-top: 1px solid #eee; flex-shrink: 0; position: relative; z-index: 900; }
+        .scroll-row { overflow-x: auto; white-space: nowrap; padding: 4px 0; }
+        .label-tag { font-size: 0.55rem; color: #aaa; text-align: left; padding-left: 15px; margin-top: 2px; }
+        .btn { display: inline-block; padding: 8px 14px; margin: 0 4px; font-size: 0.8rem; font-weight: bold; border-radius: 18px; border: none; background: #f0f0f0; color: #666; }
         .btn.active { background: #3498db; color: white; }
         .btn.heart-btn.active { background: #e74c3c; }
 
-        /* 掲示板セクション */
+        /* 掲示板 */
         #bbs-view { background: #f9f9f9; text-align: left; position: relative; z-index: 2500; }
         .bbs-header { background: #fff; padding: calc(8px + env(safe-area-inset-top)) 15px 12px 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
-        #bbs-view h3 { font-size: 1rem; color: #333; margin: 0; border-left: 4px solid #3498db; padding-left: 10px; }
-        .back-btn { background: #3498db; border: none; border-radius: 10px; padding: 6px 15px; font-size: 0.8rem; color: white; font-weight: bold; cursor: pointer; }
-        .bbs-content { padding: 15px; }
-        .bbs-form { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
-        .bbs-form input, .bbs-form textarea { border: 1px solid #ddd; border-radius: 8px; padding: 10px; font-size: 0.9rem; outline: none; -webkit-appearance: none; background: #fff; }
-        .bbs-form button { background: #3498db; color: white; border: none; border-radius: 8px; padding: 12px; font-weight: bold; font-size: 1rem; cursor: pointer; }
-        .bbs-form button:disabled { background: #ccc; }
-        .post-card { background: white; border-radius: 8px; padding: 12px; margin-bottom: 10px; border: 1px solid #eee; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .post-header { display: flex; justify-content: space-between; font-size: 0.75rem; color: #999; margin-bottom: 5px; }
-        .post-name { font-weight: bold; color: #3498db; }
-        .post-msg { font-size: 0.9rem; color: #444; white-space: pre-wrap; line-height: 1.4; }
+        .back-btn { background: #3498db; border: none; border-radius: 10px; padding: 6px 15px; font-size: 0.8rem; color: white; font-weight: bold; }
+        .bbs-content { padding: 15px; overflow-y: auto; }
+        .post-card { background: white; border-radius: 8px; padding: 10px; margin-bottom: 8px; border: 1px solid #eee; }
         
-        #footer-ver { padding: 20px 0 calc(20px + env(safe-area-inset-bottom)); font-size: 0.6rem; color: #ccc; text-align: center; }
+        #footer-ver { padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); font-size: 0.55rem; color: #ccc; text-align: center; }
     </style>
 </head>
 <body oncontextmenu="return false;">
     <div id="orientation-alert">
-        <div style="font-size: 40px; margin-bottom: 10px;">📱</div>
-        <p style="font-weight: bold; color: #666;">このアプリは縦向き専用です<br>スマホを立てて操作してください</p>
+        <p style="font-weight: bold; color: #666;">このアプリは縦向き専用です</p>
     </div>
 
     <div id="tap-guide" onclick="initAudio()"><div class="guide-circle"></div></div>
@@ -139,7 +126,7 @@
         <div id="status" class="status-waiting">待機中</div>
         <div id="header-right">
             <button class="nav-btn" onclick="location.reload();">更新</button>
-            <button class="nav-btn" id="fb-nav-btn" onclick="switchView('bbs')">フィードバック</button>
+            <button class="nav-btn" onclick="switchView('bbs')">フィードバック</button>
         </div>
     </div>
 
@@ -149,13 +136,13 @@
                 <label>呼吸</label>
                 <input type="range" id="rr-slider" min="10" max="25" step="1" value="18">
                 <div class="val-disp"><span id="rr-val">18</span><small>回</small></div>
-                <button id="lung-mute" class="mute-btn"><img src="vol_on.png" id="lung-mute-img"></button>
+                <button id="lung-mute" class="mute-btn"><img src="vol_on.png" id="lung-mute-img" style="width:100%"></button>
             </div>
             <div class="slider-row">
                 <label>心拍</label>
                 <input type="range" id="hr-slider" min="40" max="120" step="1" value="70">
                 <div class="val-disp"><span id="hr-val">70</span><small>bpm</small></div>
-                <button id="heart-mute" class="mute-btn"><img src="vol_on.png" id="heart-mute-img"></button>
+                <button id="heart-mute" class="mute-btn"><img src="vol_on.png" id="heart-mute-img" style="width:100%"></button>
             </div>
         </div>
 
@@ -189,10 +176,10 @@
             <span class="label-tag">心音症例</span>
             <div id="heart-row" class="scroll-row">
                 <button class="btn heart-btn active" data-folder="normal">正常心音</button>
-                <button class="btn heart-btn" data-folder="as">大動脈弁狭窄症</button>
-                <button class="btn heart-btn" data-folder="ar">大動脈弁閉鎖不全症</button>
-                <button class="btn heart-btn" data-folder="ms">僧帽弁狭窄症</button>
-                <button class="btn heart-btn" data-folder="mr">僧帽弁閉鎖不全症</button>
+                <button class="btn heart-btn" data-folder="as">AS</button>
+                <button class="btn heart-btn" data-folder="ar">AR</button>
+                <button class="btn heart-btn" data-folder="ms">MS</button>
+                <button class="btn heart-btn" data-folder="mr">MR</button>
             </div>
         </div>
     </div>
@@ -200,73 +187,42 @@
     <div id="bbs-view" class="view-container hidden">
         <div class="bbs-header">
             <h3>💬 フィードバック</h3>
-            <button class="back-btn" onclick="switchView('main')">操作に戻る</button>
+            <button class="back-btn" onclick="switchView('main')">戻る</button>
         </div>
         <div class="bbs-content">
-            <div class="bbs-form">
-                <input type="text" id="bbs-name" placeholder="お名前（ニックネーム可）">
-                <textarea id="bbs-msg" rows="4" placeholder="改善してほしいところや感想を書いてね"></textarea>
-                <button id="bbs-send" onclick="sendPost()">送信する</button>
+            <div class="bbs-form" style="display:flex; flex-direction:column; gap:8px;">
+                <input type="text" id="bbs-name" placeholder="お名前" style="padding:10px; border-radius:8px; border:1px solid #ddd;">
+                <textarea id="bbs-msg" rows="3" placeholder="改善点など" style="padding:10px; border-radius:8px; border:1px solid #ddd;"></textarea>
+                <button id="bbs-send" onclick="sendPost()" style="background:#3498db; color:white; padding:10px; border:none; border-radius:8px;">送信</button>
             </div>
-            <div id="bbs-list">
-                <p style="text-align: center; color: #999; font-size: 0.8rem;">読み込み中...</p>
-            </div>
+            <div id="bbs-list" style="margin-top:15px;"></div>
         </div>
-        <div id="footer-ver">オカズコントローラー Ver 4.6.141</div>
+        <div id="footer-ver">オカズコントローラー Ver 4.6.143</div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <script>
         const GAS_URL = "https://script.google.com/macros/s/AKfycbyhfuZU3xbdp-b203YDrDrjy0PuJo7kOoCwjN5dkhp5yZmj6NE9JzSxIchg4R14ufMP/exec";
-        
         let audioStarted = false;
         let players = { normal_v: null, extra_v: null, bronchial: null, heart: null };
         let clickSynth = null;
         let rrValue = 18, hrValue = 70;
         let lungFolder = "normal", heartFolder = "normal";
         let masterLoop = null, heartLoop = null, activePadId = null;
-        
-        let lungVolumeState = 0;
-        let heartVolumeState = 0;
+        let lungVolumeState = 0, heartVolumeState = 0;
         const volLevels = [0, -Infinity, -10.5, -4.4];
         const volIcons = ["vol_on.png", "vol_off.png", "vol_low.png", "vol_mid.png"];
 
         function switchView(viewName) {
             triggerClickSound();
-            const main = document.getElementById('main-view');
-            const bbs = document.getElementById('bbs-view');
-            const header = document.getElementById('header');
-
             if (viewName === 'bbs') {
-                main.style.opacity = '0';
-                main.style.transform = 'translateY(15px)';
-                header.style.opacity = '0';
-                setTimeout(() => {
-                    main.classList.add('hidden');
-                    header.classList.add('hidden');
-                    bbs.classList.remove('hidden');
-                    bbs.classList.add('view-invisible');
-                    bbs.style.transform = 'translateY(15px)';
-                    void bbs.offsetWidth;
-                    bbs.classList.remove('view-invisible');
-                    bbs.style.opacity = '1';
-                    bbs.style.transform = 'translateY(0)';
-                }, 300);
+                document.getElementById('main-view').classList.add('hidden');
+                document.getElementById('header').classList.add('hidden');
+                document.getElementById('bbs-view').classList.remove('hidden');
             } else {
-                bbs.style.opacity = '0';
-                bbs.style.transform = 'translateY(15px)';
-                setTimeout(() => {
-                    bbs.classList.add('hidden');
-                    header.classList.remove('hidden');
-                    main.classList.remove('hidden');
-                    main.classList.add('view-invisible');
-                    main.style.transform = 'translateY(-15px)';
-                    void main.offsetWidth;
-                    header.style.opacity = '1';
-                    main.classList.remove('view-invisible');
-                    main.style.opacity = '1';
-                    main.style.transform = 'translateY(0)';
-                }, 300);
+                document.getElementById('bbs-view').classList.add('hidden');
+                document.getElementById('header').classList.remove('hidden');
+                document.getElementById('main-view').classList.remove('hidden');
             }
         }
 
@@ -276,7 +232,7 @@
             await Tone.start();
             audioStarted = true;
             setTimeout(() => { document.getElementById('tap-guide').style.display = 'none'; }, 600);
-            clickSynth = new Tone.MembraneSynth({ pitchDecay: 0.005, octaves: 2, envelope: { attack: 0.001, decay: 0.05, sustain: 0, release: 0.05 } }).toDestination();
+            clickSynth = new Tone.MembraneSynth({ envelope: { attack: 0.001, decay: 0.05, sustain: 0, release: 0.05 } }).toDestination();
             clickSynth.volume.value = -6;
             loadLungSounds();
             fetchPosts();
@@ -286,36 +242,20 @@
             try {
                 const res = await fetch(GAS_URL);
                 const posts = await res.json();
-                renderPosts(posts);
-            } catch (e) {
-                document.getElementById('bbs-list').innerHTML = `<p style="color:red; font-size:0.8rem; text-align:center;">読み込みに失敗しました</p>`;
-            }
-        }
-
-        function renderPosts(posts) {
-            const list = document.getElementById('bbs-list');
-            if (!posts || posts.length === 0) {
-                list.innerHTML = `<p style="text-align: center; color: #999; font-size: 0.8rem;">まだ投稿はありません</p>`;
-                return;
-            }
-            list.innerHTML = posts.map(p => {
-                const date = new Date(p.date).toLocaleString('ja-JP', {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
-                return `<div class="post-card"><div class="post-header"><span class="post-name">${p.name || '名無しさん'}</span><span>${date}</span></div><div class="post-msg">${p.message}</div></div>`;
-            }).join('');
+                const list = document.getElementById('bbs-list');
+                list.innerHTML = posts.map(p => `<div class="post-card"><div style="font-size:0.7rem; color:#999;">${p.name || '名無し'}</div><div style="font-size:0.85rem;">${p.message}</div></div>`).join('');
+            } catch (e) { console.error(e); }
         }
 
         async function sendPost() {
             const name = document.getElementById('bbs-name').value;
             const message = document.getElementById('bbs-msg').value;
-            const btn = document.getElementById('bbs-send');
-            if (!message) return alert("メッセージを入力してね！");
-            btn.disabled = true; btn.innerText = "送信中...";
+            if (!message) return;
             try {
-                const res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ name, message }) });
-                const posts = await res.json();
-                renderPosts(posts);
+                await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ name, message }) });
                 document.getElementById('bbs-msg').value = "";
-            } catch (e) { alert("送信に失敗しました"); } finally { btn.disabled = false; btn.innerText = "送信する"; }
+                fetchPosts();
+            } catch (e) { alert("送信失敗"); }
         }
 
         function loadLungSounds() {
@@ -329,7 +269,7 @@
             if (lungFolder === "pleuritis") paths.extra_v = `./soundsource/${lungFolder}/friction_rub.wav`;
             let loaded = 0;
             Object.keys(paths).forEach(key => {
-                players[key] = new Tone.Player({ url: paths[key], volume: -Infinity, onload: () => { if (++loaded === 3) { status.innerText = "準備完了"; status.className = "status-ready"; startLungLoop(); }}, onerror: (e) => { console.error(`Error loading ${key}`, e); status.innerText = "エラー"; } }).toDestination();
+                players[key] = new Tone.Player({ url: paths[key], volume: -Infinity, onload: () => { if (++loaded === 3) { status.innerText = "準備完了"; status.className = "status-ready"; startLungLoop(); }}, onerror: (e) => { console.error(e); status.innerText = "エラー"; } }).toDestination();
             });
             loadHeartSound();
         }
@@ -345,9 +285,9 @@
                 ['normal_v','extra_v','bronchial'].forEach(k => players[k] && players[k].start(time));
                 Tone.Draw.schedule(() => {
                     const bg = document.getElementById('breathing-group');
-                    bg.classList.remove('breathing-trigger', 'breathing-asthma');
+                    bg.classList.remove('breathing-trigger');
                     void bg.offsetWidth;
-                    bg.classList.add(lungFolder === "asthma" ? 'breathing-asthma' : 'breathing-trigger');
+                    bg.classList.add('breathing-trigger');
                 }, time);
             }, 60/rrValue).start(0);
             Tone.Transport.start();
@@ -360,13 +300,11 @@
                 let lungVol = volLevels[lungVolumeState];
                 if (lungVolumeState !== 1) {
                     let target = (id == 9) ? players.bronchial : players.extra_v;
-                    let baseGain = (lungFolder === "left_pneumo" && [1,3,5,7].includes(id)) ? -25 : (lungFolder === "right_pneumo" && [2,4,6,8].includes(id)) ? -25 : 0;
                     if (lungFolder === "fc" && ![5,6,7,8].includes(id)) target = players.normal_v;
-                    if (target) target.volume.rampTo(lungVol + baseGain, 0.1);
+                    if (target) target.volume.rampTo(lungVol, 0.1);
                     ['normal_v','extra_v','bronchial'].forEach(k => { if (players[k] && players[k] !== target) players[k].volume.rampTo(-Infinity, 0.1); });
                 }
-                let heartVol = volLevels[heartVolumeState];
-                if (heartVolumeState !== 1 && players.heart && (id === 4 || id === 6)) { players.heart.volume.rampTo(heartVol - 5, 0.1); } else if (players.heart) { players.heart.volume.rampTo(-Infinity, 0.1); }
+                if (heartVolumeState !== 1 && players.heart && (id === 4 || id === 6)) { players.heart.volume.rampTo(volLevels[heartVolumeState] - 5, 0.1); } else if (players.heart) { players.heart.volume.rampTo(-Infinity, 0.1); }
                 document.getElementById(`pad-btn${id}`).classList.add('active-pad');
             } else {
                 ['normal_v','extra_v','bronchial','heart'].forEach(k => players[k] && players[k].volume.rampTo(-Infinity, 0.2));
@@ -375,8 +313,7 @@
         }
 
         function updateAnimations() {
-            const interval = 60 / rrValue;
-            let dur = (lungFolder === "asthma") ? 3.2 : (rrValue <= 18 ? 2.5 : interval);
+            let dur = (rrValue <= 18 ? 2.5 : 60/rrValue);
             document.documentElement.style.setProperty('--move-duration', `${dur}s`);
         }
 
@@ -386,12 +323,12 @@
         document.getElementById('hr-slider').addEventListener('input', e => { hrValue = parseInt(e.target.value); document.getElementById('hr-val').innerText = hrValue; if (heartLoop) heartLoop.interval = 60/hrValue; });
         document.getElementById('lung-mute').addEventListener('click', () => { triggerClickSound(); lungVolumeState = (lungVolumeState + 1) % 4; document.getElementById('lung-mute-img').src = volIcons[lungVolumeState]; if (activePadId) setVolume(activePadId, true); });
         document.getElementById('heart-mute').addEventListener('click', () => { triggerClickSound(); heartVolumeState = (heartVolumeState + 1) % 4; document.getElementById('heart-mute-img').src = volIcons[heartVolumeState]; if (activePadId) setVolume(activePadId, true); });
-        document.querySelectorAll('.lung-btn').forEach(btn => btn.addEventListener('click', () => { triggerClickSound(); lungFolder = btn.dataset.folder; document.querySelectorAll('.lung-btn').forEach(b => b.classList.toggle('active', b === btn)); loadLungSounds(); btn.scrollIntoView({ behavior: 'smooth', inline: 'center' }); }));
-        document.querySelectorAll('.heart-btn').forEach(btn => btn.addEventListener('click', () => { triggerClickSound(); heartFolder = btn.dataset.folder; document.querySelectorAll('.heart-btn').forEach(b => b.classList.toggle('active', b === btn)); loadHeartSound(); btn.scrollIntoView({ behavior: 'smooth', inline: 'center' }); }));
+        document.querySelectorAll('.lung-btn').forEach(btn => btn.addEventListener('click', () => { triggerClickSound(); lungFolder = btn.dataset.folder; document.querySelectorAll('.lung-btn').forEach(b => b.classList.toggle('active', b === btn)); loadLungSounds(); }));
+        document.querySelectorAll('.heart-btn').forEach(btn => btn.addEventListener('click', () => { triggerClickSound(); heartFolder = btn.dataset.folder; document.querySelectorAll('.heart-btn').forEach(b => b.classList.toggle('active', b === btn)); loadHeartSound(); }));
         
         document.querySelectorAll('.pad').forEach(p => {
             const id = parseInt(p.id.replace('pad-btn',''));
-            p.addEventListener('pointerdown', (e) => { e.preventDefault(); if(!activePadId){ activePadId=id; setVolume(id,true); } });
+            p.addEventListener('pointerdown', (e) => { e.preventDefault(); activePadId=id; setVolume(id,true); });
             const stop = (e) => { e.preventDefault(); if(activePadId==id){ setVolume(id,false); activePadId=null; } };
             ['pointerup','pointerleave','pointercancel'].forEach(ev => p.addEventListener(ev, stop));
         });
