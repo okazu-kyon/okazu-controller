@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="オカズコントローラー">
 
-    <title>オカズコントローラー Ver 4.6.146</title>
+    <title>オカズコントローラー Ver 4.6.147</title>
     <style>
         * {
             -webkit-touch-callout: none !important;
@@ -89,13 +89,13 @@
 
         #main-content { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; background: #fff; position: relative; z-index: 100; }
         
-        /* 画像の下部を隠してボタンを上に詰める修正 */
+        /* スマホでも確実に下部をカットするための比率固定 */
         #pad-container { 
             position: relative; 
             width: 100%; 
             max-width: 420px; 
-            max-height: 410px; /* ここで高さを制限 */
-            overflow: hidden;  /* はみ出た下部をカット */
+            aspect-ratio: 1 / 1.0; /* 1:1に固定することで、縦長の画像の下部を強制カット */
+            overflow: hidden; 
         }
         
         #breathing-group { position: relative; width: 100%; line-height: 0; transform-origin: 50% 40%; will-change: transform; --y-fixed: -8px; --x-fixed: 1.06; }
@@ -204,7 +204,7 @@
         <div class="bbs-content">
             <div id="bbs-list"></div>
         </div>
-        <div id="footer-ver">オカズコントローラー Ver 4.6.146</div>
+        <div id="footer-ver">オカズコントローラー Ver 4.6.147</div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
