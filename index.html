@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="オカズコントローラー">
 
-    <title>オカズコントローラー Ver 4.6.128</title>
+    <title>オカズコントローラー Ver 4.6.129</title>
     <style>
         * {
             -webkit-touch-callout: none !important;
@@ -45,15 +45,25 @@
         .guide-circle::after { content: "ここを\Aタッチ"; font-size: 22px; font-weight: 900; color: #d63031; white-space: pre; line-height: 1.2; text-align: center; }
         @keyframes guide-pulse-animation { 0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(214, 48, 49, 0.7); } 70% { transform: scale(1.1); box-shadow: 0 0 0 40px rgba(214, 48, 49, 0); } 100% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(214, 48, 49, 0); } }
         
-        #header { background: #fff; padding: calc(5px + env(safe-area-inset-top)) 15px 2px 15px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
-        #header-right { display: flex; align-items: center; gap: 10px; }
+        #header { background: #fff; padding: calc(8px + env(safe-area-inset-top)) 15px 5px 15px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        #header-right { display: flex; align-items: center; gap: 8px; }
         #status { font-size: 0.8rem; font-weight: bold; padding: 4px 12px; border-radius: 20px; min-width: 70px; }
         .status-waiting { background: #ff7675; color: white; animation: pulse 2s infinite; }
         .status-loading { background: #ffeaa7; color: #d35400; }
         .status-ready { background: #ebfbee; color: #1b5e20; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
 
-        #reload-btn { background: #f0f0f0; border: none; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; color: #666; }
+        /* 更新ボタンを漢字のデザインに統一 */
+        #reload-btn { 
+            background: #f0f0f0; 
+            border: none; 
+            border-radius: 15px; 
+            padding: 4px 12px; 
+            font-size: 0.75rem; 
+            font-weight: bold;
+            color: #666; 
+            cursor: pointer;
+        }
 
         .control-panel { background: #fff; padding: 5px 0; border-bottom: 2px solid #ddd; flex-shrink: 0; }
         .slider-row { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 2px 0; }
@@ -103,8 +113,8 @@
     <div id="header">
         <div id="status" class="status-waiting">待機中</div>
         <div id="header-right">
-            <button id="reload-btn" onclick="location.reload();">🔄</button>
-            <div style="font-size: 0.6rem; color: #ccc;">Ver 4.6.128</div>
+            <button id="reload-btn" onclick="location.reload();">更新</button>
+            <div style="font-size: 0.6rem; color: #ccc;">Ver 4.6.129</div>
         </div>
     </div>
 
@@ -188,7 +198,6 @@
         const volLevels = [0, -Infinity, -10.5, -4.4];
         const volIcons = ["vol_on.png", "vol_off.png", "vol_low.png", "vol_mid.png"];
 
-        // 拡大防止対策
         let lastTouchEnd = 0;
         document.addEventListener('touchend', (e) => {
             const now = Date.now();
@@ -209,10 +218,9 @@
             clickSynth.volume.value = -6;
 
             loadLungSounds();
-            fetchPosts(); // 掲示板読み込み開始
+            fetchPosts();
         }
 
-        // --- 掲示板機能 ---
         async function fetchPosts() {
             try {
                 const res = await fetch(GAS_URL);
@@ -245,12 +253,8 @@
             const name = document.getElementById('bbs-name').value;
             const message = document.getElementById('bbs-msg').value;
             const btn = document.getElementById('bbs-send');
-
             if (!message) return alert("メッセージを入力してね！");
-
-            btn.disabled = true;
-            btn.innerText = "送信中...";
-
+            btn.disabled = true; btn.innerText = "送信中...";
             try {
                 const res = await fetch(GAS_URL, {
                     method: "POST",
@@ -259,21 +263,14 @@
                 const posts = await res.json();
                 renderPosts(posts);
                 document.getElementById('bbs-msg').value = "";
-            } catch (e) {
-                alert("送信に失敗しました");
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "送信する";
-            }
+            } catch (e) { alert("送信に失敗しました"); } finally { btn.disabled = false; btn.innerText = "送信する"; }
         }
 
-        // --- オーディオ制御系（既存機能） ---
         function loadLungSounds() {
             const status = document.getElementById('status');
             status.innerText = "読込中..."; status.className = "status-loading";
             ['normal_v','extra_v','bronchial'].forEach(k => { if(players[k]) players[k].dispose(); });
             if (masterLoop) masterLoop.dispose();
-
             const paths = {
                 normal_v: `./soundsource/normal/vesicular.wav`,
                 extra_v: `./soundsource/${lungFolder}/vesicular.wav`,
@@ -282,13 +279,12 @@
             if (lungFolder === "asthma") paths.extra_v = `./soundsource/${lungFolder}/wheeze.wav`;
             if (lungFolder === "fc") paths.extra_v = `./soundsource/${lungFolder}/fine_crackles.wav`;
             if (lungFolder === "pleuritis") paths.extra_v = `./soundsource/${lungFolder}/friction_rub.wav`;
-
             let loaded = 0;
             Object.keys(paths).forEach(key => {
                 players[key] = new Tone.Player({ 
                     url: paths[key], volume: -Infinity, 
                     onload: () => { if (++loaded === 3) { status.innerText = "準備完了"; status.className = "status-ready"; startLungLoop(); }},
-                    onerror: (e) => console.error(`Error [${key}]:`, e)
+                    onerror: (e) => { console.error(`Audio error [${key}]:`, e); status.innerText = "エラー"; }
                 }).toDestination();
             });
             loadHeartSound();
@@ -349,7 +345,6 @@
 
         function triggerClickSound() { if (audioStarted && clickSynth) clickSynth.triggerAttackRelease("C6", "32n", undefined, 0.4); }
 
-        // イベントリスナー
         document.getElementById('rr-slider').addEventListener('input', e => {
             rrValue = parseInt(e.target.value); document.getElementById('rr-val').innerText = rrValue;
             if (masterLoop) masterLoop.interval = 60/rrValue; updateAnimations();
