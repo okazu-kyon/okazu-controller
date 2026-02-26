@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="オカズコントローラー">
 
-    <title>オカズコントローラー Ver 4.6.130</title>
+    <title>オカズコントローラー Ver 4.6.131</title>
     <style>
         * {
             -webkit-touch-callout: none !important;
@@ -27,10 +27,8 @@
             height: 100%; 
             margin: 0; 
             padding: 0; 
-            overflow-x: hidden;
-            overflow-y: auto; 
+            overflow: hidden; /* 全体のスクロールを禁止 */
             background: #ffffff; 
-            scroll-behavior: smooth;
         }
 
         body { 
@@ -45,7 +43,7 @@
         .guide-circle::after { content: "ここを\Aタッチ"; font-size: 22px; font-weight: 900; color: #d63031; white-space: pre; line-height: 1.2; text-align: center; }
         @keyframes guide-pulse-animation { 0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(214, 48, 49, 0.7); } 70% { transform: scale(1.1); box-shadow: 0 0 0 40px rgba(214, 48, 49, 0); } 100% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(214, 48, 49, 0); } }
         
-        #header { background: #fff; padding: calc(8px + env(safe-area-inset-top)) 15px 5px 15px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; border-bottom: 1px solid #f0f0f0; }
+        #header { background: #fff; padding: calc(8px + env(safe-area-inset-top)) 15px 5px 15px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; border-bottom: 1px solid #f0f0f0; z-index: 100; }
         #header-right { display: flex; align-items: center; gap: 6px; }
         #status { font-size: 0.7rem; font-weight: bold; padding: 4px 10px; border-radius: 20px; min-width: 60px; }
         .status-waiting { background: #ff7675; color: white; animation: pulse 2s infinite; }
@@ -53,16 +51,11 @@
         .status-ready { background: #ebfbee; color: #1b5e20; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
 
-        .nav-btn { 
-            background: #f0f0f0; 
-            border: none; 
-            border-radius: 12px; 
-            padding: 5px 10px; 
-            font-size: 0.7rem; 
-            font-weight: bold;
-            color: #666; 
-            cursor: pointer;
-        }
+        .nav-btn { background: #f0f0f0; border: none; border-radius: 12px; padding: 5px 10px; font-size: 0.7rem; font-weight: bold; color: #666; cursor: pointer; }
+
+        /* 画面切り替え用のコンテナ */
+        .view-container { flex: 1; display: flex; flex-direction: column; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        .hidden { display: none !important; }
 
         .control-panel { background: #fff; padding: 5px 0; border-bottom: 2px solid #ddd; flex-shrink: 0; }
         .slider-row { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 2px 0; }
@@ -85,7 +78,7 @@
         .pad { position: absolute; width: 13%; height: 9%; background: rgba(255, 255, 255, 0); border: 2px solid white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1rem; color: white; cursor: pointer; z-index: 10; transform: translate(-50%, -50%); }
         .active-pad { background: rgba(231, 76, 60, 0.8) !important; border-color: #ffcccc; }
 
-        .selector-container { background: #fff; padding-bottom: 10px; border-top: 1px solid #eee; flex-shrink: 0; }
+        .selector-container { background: #fff; padding-bottom: 20px; border-top: 1px solid #eee; flex-shrink: 0; }
         .scroll-row { overflow-x: auto; white-space: nowrap; padding: 6px 0; scroll-behavior: smooth; touch-action: pan-x; }
         .scroll-row::-webkit-scrollbar { display: none; }
         .label-tag { font-size: 0.6rem; color: #aaa; text-align: left; padding-left: 15px; display: block; margin-top: 4px; }
@@ -94,12 +87,12 @@
         .btn.heart-btn.active { background: #e74c3c; }
 
         /* 掲示板セクション */
-        #bbs-section { background: #f9f9f9; border-top: 2px solid #eee; padding: 20px 15px 40px; text-align: left; }
+        #bbs-view { background: #f9f9f9; padding: 20px 15px; text-align: left; }
         .bbs-title-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        #bbs-section h3 { font-size: 1rem; color: #333; margin: 0; border-left: 4px solid #3498db; padding-left: 10px; }
-        .back-btn { background: #eee; border: none; border-radius: 10px; padding: 4px 10px; font-size: 0.7rem; color: #666; font-weight: bold; }
+        #bbs-view h3 { font-size: 1rem; color: #333; margin: 0; border-left: 4px solid #3498db; padding-left: 10px; }
+        .back-btn { background: #3498db; border: none; border-radius: 10px; padding: 6px 15px; font-size: 0.8rem; color: white; font-weight: bold; }
         .bbs-form { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
-        .bbs-form input, .bbs-form textarea { border: 1px solid #ddd; border-radius: 8px; padding: 10px; font-size: 0.9rem; outline: none; -webkit-appearance: none; }
+        .bbs-form input, .bbs-form textarea { border: 1px solid #ddd; border-radius: 8px; padding: 10px; font-size: 0.9rem; outline: none; -webkit-appearance: none; background: #fff; }
         .bbs-form button { background: #3498db; color: white; border: none; border-radius: 8px; padding: 12px; font-weight: bold; font-size: 1rem; cursor: pointer; }
         .bbs-form button:disabled { background: #ccc; }
         .post-card { background: white; border-radius: 8px; padding: 12px; margin-bottom: 10px; border: 1px solid #eee; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
@@ -107,7 +100,7 @@
         .post-name { font-weight: bold; color: #3498db; }
         .post-msg { font-size: 0.9rem; color: #444; white-space: pre-wrap; line-height: 1.4; }
         
-        #footer-ver { padding: 20px 0 calc(20px + env(safe-area-inset-bottom)); font-size: 0.6rem; color: #ccc; background: #f9f9f9; }
+        #footer-ver { padding: 20px 0 calc(20px + env(safe-area-inset-bottom)); font-size: 0.6rem; color: #ccc; text-align: center; }
     </style>
 </head>
 <body oncontextmenu="return false;">
@@ -117,78 +110,79 @@
         <div id="status" class="status-waiting">待機中</div>
         <div id="header-right">
             <button class="nav-btn" onclick="location.reload();">更新</button>
-            <button class="nav-btn" onclick="document.getElementById('bbs-section').scrollIntoView();">フィードバック</button>
+            <button class="nav-btn" id="fb-nav-btn" onclick="switchView('bbs')">フィードバック</button>
         </div>
     </div>
 
-    <div class="control-panel" id="top-panel">
-        <div class="slider-row">
-            <label>呼吸</label>
-            <input type="range" id="rr-slider" min="10" max="25" step="1" value="18">
-            <div class="val-disp"><span id="rr-val">18</span><small>回</small></div>
-            <button id="lung-mute" class="mute-btn"><img src="vol_on.png" id="lung-mute-img"></button>
+    <div id="main-view" class="view-container">
+        <div class="control-panel">
+            <div class="slider-row">
+                <label>呼吸</label>
+                <input type="range" id="rr-slider" min="10" max="25" step="1" value="18">
+                <div class="val-disp"><span id="rr-val">18</span><small>回</small></div>
+                <button id="lung-mute" class="mute-btn"><img src="vol_on.png" id="lung-mute-img"></button>
+            </div>
+            <div class="slider-row">
+                <label>心拍</label>
+                <input type="range" id="hr-slider" min="40" max="120" step="1" value="70">
+                <div class="val-disp"><span id="hr-val">70</span><small>bpm</small></div>
+                <button id="heart-mute" class="mute-btn"><img src="vol_on.png" id="heart-mute-img"></button>
+            </div>
         </div>
-        <div class="slider-row">
-            <label>心拍</label>
-            <input type="range" id="hr-slider" min="40" max="120" step="1" value="70">
-            <div class="val-disp"><span id="hr-val">70</span><small>bpm</small></div>
-            <button id="heart-mute" class="mute-btn"><img src="vol_on.png" id="heart-mute-img"></button>
-        </div>
-    </div>
 
-    <div id="main-content">
-        <div id="pad-container">
-            <div id="breathing-group">
-                <img src="body_image.jpg" alt="body" id="body-img">
-                <div class="pad" id="pad-btn9" style="top: 30%; left: 50%;">9</div>
-                <div class="pad" id="pad-btn1" style="top: 32%; left: 30%;">1</div>
-                <div class="pad" id="pad-btn2" style="top: 32%; left: 70%;">2</div>
-                <div class="pad" id="pad-btn3" style="top: 45%; left: 33%;">3</div>
-                <div class="pad" id="pad-btn4" style="top: 45%; left: 67%;">4</div>
-                <div class="pad" id="pad-btn5" style="top: 59%; left: 37%;">5</div>
-                <div class="pad" id="pad-btn6" style="top: 59%; left: 63%;">6</div>
-                <div class="pad" id="pad-btn7" style="top: 57%; left: 18%;">7</div>
-                <div class="pad" id="pad-btn8" style="top: 57%; left: 82%;">8</div>
+        <div id="main-content">
+            <div id="pad-container">
+                <div id="breathing-group">
+                    <img src="body_image.jpg" alt="body" id="body-img">
+                    <div class="pad" id="pad-btn9" style="top: 30%; left: 50%;">9</div>
+                    <div class="pad" id="pad-btn1" style="top: 32%; left: 30%;">1</div>
+                    <div class="pad" id="pad-btn2" style="top: 32%; left: 70%;">2</div>
+                    <div class="pad" id="pad-btn3" style="top: 45%; left: 33%;">3</div>
+                    <div class="pad" id="pad-btn4" style="top: 45%; left: 67%;">4</div>
+                    <div class="pad" id="pad-btn5" style="top: 59%; left: 37%;">5</div>
+                    <div class="pad" id="pad-btn6" style="top: 59%; left: 63%;">6</div>
+                    <div class="pad" id="pad-btn7" style="top: 57%; left: 18%;">7</div>
+                    <div class="pad" id="pad-btn8" style="top: 57%; left: 82%;">8</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="selector-container">
+            <span class="label-tag">呼吸音症例</span>
+            <div id="lung-row" class="scroll-row">
+                <button class="btn lung-btn active" data-folder="normal">正常呼吸音</button>
+                <button class="btn lung-btn" data-folder="fc">間質性肺炎</button>
+                <button class="btn lung-btn" data-folder="left_pneumo">右気胸</button>
+                <button class="btn lung-btn" data-folder="right_pneumo">左気胸</button>
+                <button class="btn lung-btn" data-folder="asthma">喘息発作</button>
+                <button class="btn lung-btn" data-folder="pleuritis">胸膜炎</button>
+            </div>
+            <span class="label-tag">心音症例</span>
+            <div id="heart-row" class="scroll-row">
+                <button class="btn heart-btn active" data-folder="normal">正常心音</button>
+                <button class="btn heart-btn" data-folder="as">大動脈弁狭窄症</button>
+                <button class="btn heart-btn" data-folder="ar">大動脈弁閉鎖不全症</button>
+                <button class="btn heart-btn" data-folder="ms">僧帽弁狭窄症</button>
+                <button class="btn heart-btn" data-folder="mr">僧帽弁閉鎖不全症</button>
             </div>
         </div>
     </div>
 
-    <div class="selector-container">
-        <span class="label-tag">呼吸音症例</span>
-        <div id="lung-row" class="scroll-row">
-            <button class="btn lung-btn active" data-folder="normal">正常呼吸音</button>
-            <button class="btn lung-btn" data-folder="fc">間質性肺炎</button>
-            <button class="btn lung-btn" data-folder="left_pneumo">右気胸</button>
-            <button class="btn lung-btn" data-folder="right_pneumo">左気胸</button>
-            <button class="btn lung-btn" data-folder="asthma">喘息発作</button>
-            <button class="btn lung-btn" data-folder="pleuritis">胸膜炎</button>
-        </div>
-        <span class="label-tag">心音症例</span>
-        <div id="heart-row" class="scroll-row">
-            <button class="btn heart-btn active" data-folder="normal">正常心音</button>
-            <button class="btn heart-btn" data-folder="as">大動脈弁狭窄症</button>
-            <button class="btn heart-btn" data-folder="ar">大動脈弁閉鎖不全症</button>
-            <button class="btn heart-btn" data-folder="ms">僧帽弁狭窄症</button>
-            <button class="btn heart-btn" data-folder="mr">僧帽弁閉鎖不全症</button>
-        </div>
-    </div>
-
-    <div id="bbs-section">
+    <div id="bbs-view" class="view-container hidden">
         <div class="bbs-title-row">
             <h3>💬 改善フィードバック</h3>
-            <button class="back-btn" onclick="document.getElementById('top-panel').scrollIntoView();">操作に戻る ↑</button>
+            <button class="back-btn" onclick="switchView('main')">操作に戻る</button>
         </div>
         <div class="bbs-form">
             <input type="text" id="bbs-name" placeholder="お名前（ニックネーム可）">
-            <textarea id="bbs-msg" rows="3" placeholder="改善してほしいところや感想を書いてね"></textarea>
+            <textarea id="bbs-msg" rows="4" placeholder="改善してほしいところや感想を書いてね"></textarea>
             <button id="bbs-send" onclick="sendPost()">送信する</button>
         </div>
         <div id="bbs-list">
             <p style="text-align: center; color: #999; font-size: 0.8rem;">読み込み中...</p>
         </div>
+        <div id="footer-ver">オカズコントローラー Ver 4.6.131</div>
     </div>
-
-    <div id="footer-ver">オカズコントローラー Ver 4.6.130</div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <script>
@@ -206,12 +200,18 @@
         const volLevels = [0, -Infinity, -10.5, -4.4];
         const volIcons = ["vol_on.png", "vol_off.png", "vol_low.png", "vol_mid.png"];
 
-        let lastTouchEnd = 0;
-        document.addEventListener('touchend', (e) => {
-            const now = Date.now();
-            if (now - lastTouchEnd <= 300) e.preventDefault();
-            lastTouchEnd = now;
-        }, { passive: false });
+        function switchView(viewName) {
+            triggerClickSound();
+            if (viewName === 'bbs') {
+                document.getElementById('main-view').classList.add('hidden');
+                document.getElementById('bbs-view').classList.remove('hidden');
+                document.getElementById('fb-nav-btn').classList.add('hidden');
+            } else {
+                document.getElementById('bbs-view').classList.add('hidden');
+                document.getElementById('main-view').classList.remove('hidden');
+                document.getElementById('fb-nav-btn').classList.remove('hidden');
+            }
+        }
 
         async function initAudio() {
             if (audioStarted) return;
