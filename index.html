@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="オカズコントローラー">
 
-    <title>オカズコントローラー Ver 4.6.145</title>
+    <title>オカズコントローラー Ver 4.6.146</title>
     <style>
         * {
             -webkit-touch-callout: none !important;
@@ -78,7 +78,6 @@
         }
         .hidden { display: none !important; }
 
-        /* スライダー周りの余白を修正 */
         .control-panel { background: #fff; padding: 2px 0; border-bottom: 2px solid #ddd; flex-shrink: 0; position: relative; z-index: 900; }
         .slider-row { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0; }
         .slider-row label { font-size: 0.75rem; font-weight: bold; color: #666; width: 35px; }
@@ -89,7 +88,16 @@
         .mute-btn img { width: 100%; height: 100%; object-fit: contain; }
 
         #main-content { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; background: #fff; position: relative; z-index: 100; }
-        #pad-container { position: relative; width: 100%; max-width: 420px; }
+        
+        /* 画像の下部を隠してボタンを上に詰める修正 */
+        #pad-container { 
+            position: relative; 
+            width: 100%; 
+            max-width: 420px; 
+            max-height: 410px; /* ここで高さを制限 */
+            overflow: hidden;  /* はみ出た下部をカット */
+        }
+        
         #breathing-group { position: relative; width: 100%; line-height: 0; transform-origin: 50% 40%; will-change: transform; --y-fixed: -8px; --x-fixed: 1.06; }
         #body-img { width: 100%; height: auto; pointer-events: none; }
         .breathing-trigger { animation: realistic-breath var(--move-duration) cubic-bezier(0.45, 0.05, 0.55, 0.95) forwards; }
@@ -196,7 +204,7 @@
         <div class="bbs-content">
             <div id="bbs-list"></div>
         </div>
-        <div id="footer-ver">オカズコントローラー Ver 4.6.145</div>
+        <div id="footer-ver">オカズコントローラー Ver 4.6.146</div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
