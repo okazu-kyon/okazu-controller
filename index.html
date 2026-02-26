@@ -9,14 +9,13 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="オカズコントローラー">
 
-    <title>オカズコントローラー Ver 4.6.144</title>
+    <title>オカズコントローラー Ver 4.6.141</title>
     <style>
         * {
             -webkit-touch-callout: none !important;
             -webkit-user-select: none !important;
             user-select: none !important;
             -webkit-tap-highlight-color: transparent !important;
-            touch-action: manipulation;
         }
 
         input[type="text"], textarea {
@@ -50,7 +49,6 @@
             #orientation-alert { display: flex; }
         }
         
-        /* ガイド */
         #tap-guide { 
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             background: rgba(255,255,255,0.9); z-index: 20000; 
@@ -67,55 +65,34 @@
         #header { background: #fff; padding: calc(8px + env(safe-area-inset-top)) 15px 5px 15px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; border-bottom: 1px solid #f0f0f0; position: relative; z-index: 1000; }
         #header-right { display: flex; align-items: center; gap: 6px; }
         #status { font-size: 0.7rem; font-weight: bold; padding: 4px 10px; border-radius: 20px; min-width: 60px; }
-        .status-waiting { background: #ff7675; color: white; }
+        .status-waiting { background: #ff7675; color: white; animation: pulse 2s infinite; }
         .status-loading { background: #ffeaa7; color: #d35400; }
         .status-ready { background: #ebfbee; color: #1b5e20; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
 
         .nav-btn { background: #f0f0f0; border: none; border-radius: 12px; padding: 5px 10px; font-size: 0.7rem; font-weight: bold; color: #666; cursor: pointer; }
 
-        .view-container { 
-            flex: 1; display: flex; flex-direction: column; overflow: hidden;
-        }
+        .view-container { flex: 1; display: flex; flex-direction: column; overflow-y: auto; -webkit-overflow-scrolling: touch; }
         .hidden { display: none !important; }
 
         .control-panel { background: #fff; padding: 5px 0; border-bottom: 2px solid #ddd; flex-shrink: 0; position: relative; z-index: 900; }
         .slider-row { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 2px 0; }
         .slider-row label { font-size: 0.75rem; font-weight: bold; color: #666; width: 35px; }
-        input[type="range"] { -webkit-appearance: none; width: 110px; height: 6px; background: #eee; border-radius: 4px; outline: none; }
+        input[type="range"] { -webkit-appearance: none; width: 110px; height: 6px; background: #eee; border-radius: 4px; outline: none; touch-action: pan-x; }
         input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; background: #3498db; border-radius: 50%; border: 2px solid #fff; }
         .val-disp { font-size: 1.1rem; font-weight: 900; color: #2980b9; min-width: 65px; text-align: left; }
-        .mute-btn { width: 40px; height: 40px; border: none; background: none; cursor: pointer; }
+        .mute-btn { width: 40px; height: 40px; border: none; background: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .mute-btn img { width: 100%; height: 100%; object-fit: contain; }
 
         #main-content { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; background: #fff; position: relative; z-index: 100; }
         #pad-container { position: relative; width: 100%; max-width: 420px; }
-        
-        /* 画像の下部1/6をカットする設定 */
-        #breathing-group { 
-            position: relative; 
-            width: 100%; 
-            line-height: 0; 
-            transform-origin: 50% 40%; 
-            will-change: transform; 
-            --y-fixed: -8px; 
-            --x-fixed: 1.06;
-            overflow: hidden; /* カット用 */
-            height: 0;
-            padding-bottom: 111%; /* 元の比率133%から約1/6(22%)を引いた値 */
-        }
-        #body-img { 
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; 
-            height: auto; 
-            pointer-events: none; 
-        }
-
+        #breathing-group { position: relative; width: 100%; line-height: 0; transform-origin: 50% 40%; will-change: transform; --y-fixed: -8px; --x-fixed: 1.06; }
+        #body-img { width: 100%; height: auto; pointer-events: none; }
         .breathing-trigger { animation: realistic-breath var(--move-duration) cubic-bezier(0.45, 0.05, 0.55, 0.95) forwards; }
         @keyframes realistic-breath { 0%, 100% { transform: scale(1.0) translateY(0px); } 52% { transform: scale(var(--x-fixed), calc(1 + (var(--x-fixed) - 1) * 0.4)) translateY(var(--y-fixed)); } }
         .breathing-asthma { animation: asthma-breath 3.2s cubic-bezier(0.45, 0.05, 0.55, 0.95) forwards; }
         @keyframes asthma-breath { 0%, 100% { transform: scale(1.0) translateY(0px); } 21.9% { transform: scale(var(--x-fixed), calc(1 + (var(--x-fixed) - 1) * 0.4)) translateY(var(--y-fixed)); } }
 
-        /* パッド位置（高さの基準が全体からカット分ずれるため、位置をパーセントで維持） */
         .pad { position: absolute; width: 13%; height: 9%; background: rgba(255, 255, 255, 0); border: 2px solid white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1rem; color: white; cursor: pointer; z-index: 1010; transform: translate(-50%, -50%); }
         .active-pad { background: rgba(231, 76, 60, 0.8) !important; border-color: #ffcccc; }
 
@@ -128,8 +105,8 @@
         .btn.heart-btn.active { background: #e74c3c; }
 
         #bbs-view { background: #f9f9f9; text-align: left; position: relative; z-index: 2500; }
-        .bbs-header { background: #fff; padding: calc(8px + env(safe-area-inset-top)) 15px 12px 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
-        .back-btn { background: #3498db; border: none; border-radius: 10px; padding: 6px 15px; font-size: 0.8rem; color: white; font-weight: bold; }
+        .bbs-header { background: #fff; padding: calc(8px + env(safe-area-inset-top)) 15px 12px 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        .back-btn { background: #3498db; border: none; border-radius: 10px; padding: 6px 15px; font-size: 0.8rem; color: white; font-weight: bold; cursor: pointer; }
         .bbs-content { padding: 15px; }
         .post-card { background: white; border-radius: 8px; padding: 12px; margin-bottom: 10px; border: 1px solid #eee; }
         
@@ -157,13 +134,13 @@
                 <label>呼吸</label>
                 <input type="range" id="rr-slider" min="10" max="25" step="1" value="18">
                 <div class="val-disp"><span id="rr-val">18</span><small>回</small></div>
-                <button id="lung-mute" class="mute-btn"><img src="vol_on.png" id="lung-mute-img" width="100%"></button>
+                <button id="lung-mute" class="mute-btn"><img src="vol_on.png" id="lung-mute-img"></button>
             </div>
             <div class="slider-row">
                 <label>心拍</label>
                 <input type="range" id="hr-slider" min="40" max="120" step="1" value="70">
                 <div class="val-disp"><span id="hr-val">70</span><small>bpm</small></div>
-                <button id="heart-mute" class="mute-btn"><img src="vol_on.png" id="heart-mute-img" width="100%"></button>
+                <button id="heart-mute" class="mute-btn"><img src="vol_on.png" id="heart-mute-img"></button>
             </div>
         </div>
 
@@ -213,7 +190,7 @@
         <div class="bbs-content">
             <div id="bbs-list"></div>
         </div>
-        <div id="footer-ver">オカズコントローラー Ver 4.6.144</div>
+        <div id="footer-ver">オカズコントローラー Ver 4.6.141</div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
@@ -251,6 +228,16 @@
             clickSynth = new Tone.MembraneSynth({ envelope: { attack: 0.001, decay: 0.05, sustain: 0, release: 0.05 } }).toDestination();
             clickSynth.volume.value = -6;
             loadLungSounds();
+            fetchPosts();
+        }
+
+        async function fetchPosts() {
+            try {
+                const res = await fetch(GAS_URL);
+                const posts = await res.json();
+                const list = document.getElementById('bbs-list');
+                list.innerHTML = posts.map(p => `<div class="post-card"><div style="font-size:0.75rem; color:#999;">${p.name || '名無し'}</div><div style="font-size:0.9rem;">${p.message}</div></div>`).join('');
+            } catch (e) { console.error(e); }
         }
 
         function loadLungSounds() {
@@ -263,16 +250,7 @@
             if (lungFolder === "pleuritis") paths.extra_v = `./soundsource/${lungFolder}/friction_rub.wav`;
             let loaded = 0;
             Object.keys(paths).forEach(key => {
-                players[key] = new Tone.Player({ url: paths[key], volume: -Infinity, onload: () => { 
-                    if (++loaded === 3) { 
-                        status.innerText = "準備完了"; status.className = "status-ready"; 
-                        if(masterLoop) masterLoop.dispose();
-                        startLungLoop(); 
-                    }
-                }, onerror: (e) => { 
-                    console.error("Audio Load Error:", key, e);
-                    status.innerText = "エラー"; 
-                }}).toDestination();
+                players[key] = new Tone.Player({ url: paths[key], volume: -Infinity, onload: () => { if (++loaded === 3) { status.innerText = "準備完了"; status.className = "status-ready"; startLungLoop(); }}, onerror: (e) => { status.innerText = "エラー"; } }).toDestination();
             });
             loadHeartSound();
         }
@@ -280,12 +258,13 @@
         function loadHeartSound() {
             if (players.heart) players.heart.dispose();
             players.heart = new Tone.Player({ url: `./soundsource/heart/${heartFolder}.wav`, volume: -Infinity, onload: () => {
-                if(heartLoop) heartLoop.dispose();
+                if (heartLoop) heartLoop.dispose();
                 heartLoop = new Tone.Loop(time => players.heart.start(time), 60/hrValue).start(0);
             }}).toDestination();
         }
 
         function startLungLoop() {
+            if (masterLoop) masterLoop.dispose();
             masterLoop = new Tone.Loop(time => {
                 ['normal_v','extra_v','bronchial'].forEach(k => players[k] && players[k].start(time));
                 Tone.Draw.schedule(() => {
@@ -296,6 +275,7 @@
                 }, time);
             }, 60/rrValue).start(0);
             Tone.Transport.start();
+            updateAnimations();
         }
 
         function setVolume(id, isOn) {
@@ -316,9 +296,14 @@
             }
         }
 
+        function updateAnimations() {
+            let dur = (lungFolder === "asthma") ? 3.2 : (rrValue <= 18 ? 2.5 : 60/rrValue);
+            document.documentElement.style.setProperty('--move-duration', `${dur}s`);
+        }
+
         function triggerClickSound() { if (audioStarted && clickSynth) clickSynth.triggerAttackRelease("C6", "32n", undefined, 0.4); }
 
-        document.getElementById('rr-slider').addEventListener('input', e => { rrValue = parseInt(e.target.value); document.getElementById('rr-val').innerText = rrValue; if (masterLoop) masterLoop.interval = 60/rrValue; });
+        document.getElementById('rr-slider').addEventListener('input', e => { rrValue = parseInt(e.target.value); document.getElementById('rr-val').innerText = rrValue; if (masterLoop) masterLoop.interval = 60/rrValue; updateAnimations(); });
         document.getElementById('hr-slider').addEventListener('input', e => { hrValue = parseInt(e.target.value); document.getElementById('hr-val').innerText = hrValue; if (heartLoop) heartLoop.interval = 60/hrValue; });
         document.getElementById('lung-mute').addEventListener('click', () => { triggerClickSound(); lungVolumeState = (lungVolumeState + 1) % 4; document.getElementById('lung-mute-img').src = volIcons[lungVolumeState]; if (activePadId) setVolume(activePadId, true); });
         document.getElementById('heart-mute').addEventListener('click', () => { triggerClickSound(); heartVolumeState = (heartVolumeState + 1) % 4; document.getElementById('heart-mute-img').src = volIcons[heartVolumeState]; if (activePadId) setVolume(activePadId, true); });
