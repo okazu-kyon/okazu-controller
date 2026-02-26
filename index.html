@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="オカズコントローラー">
 
-    <title>オカズコントローラー Ver 4.6.131</title>
+    <title>オカズコントローラー Ver 4.6.132</title>
     <style>
         * {
             -webkit-touch-callout: none !important;
@@ -27,7 +27,7 @@
             height: 100%; 
             margin: 0; 
             padding: 0; 
-            overflow: hidden; /* 全体のスクロールを禁止 */
+            overflow: hidden; 
             background: #ffffff; 
         }
 
@@ -36,6 +36,17 @@
             text-align: center; 
             display: flex; 
             flex-direction: column; 
+        }
+
+        /* 横向き防止用アラート */
+        #orientation-alert {
+            display: none;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #fff; z-index: 20000;
+            flex-direction: column; align-items: center; justify-content: center;
+        }
+        @media screen and (orientation: landscape) {
+            #orientation-alert { display: flex; }
         }
         
         #tap-guide { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 10000; display: flex; align-items: center; justify-content: center; }
@@ -53,7 +64,6 @@
 
         .nav-btn { background: #f0f0f0; border: none; border-radius: 12px; padding: 5px 10px; font-size: 0.7rem; font-weight: bold; color: #666; cursor: pointer; }
 
-        /* 画面切り替え用のコンテナ */
         .view-container { flex: 1; display: flex; flex-direction: column; overflow-y: auto; -webkit-overflow-scrolling: touch; }
         .hidden { display: none !important; }
 
@@ -87,10 +97,11 @@
         .btn.heart-btn.active { background: #e74c3c; }
 
         /* 掲示板セクション */
-        #bbs-view { background: #f9f9f9; padding: 20px 15px; text-align: left; }
-        .bbs-title-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        #bbs-view { background: #f9f9f9; text-align: left; }
+        .bbs-header { background: #fff; padding: calc(8px + env(safe-area-inset-top)) 15px 12px 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
         #bbs-view h3 { font-size: 1rem; color: #333; margin: 0; border-left: 4px solid #3498db; padding-left: 10px; }
-        .back-btn { background: #3498db; border: none; border-radius: 10px; padding: 6px 15px; font-size: 0.8rem; color: white; font-weight: bold; }
+        .back-btn { background: #3498db; border: none; border-radius: 10px; padding: 6px 15px; font-size: 0.8rem; color: white; font-weight: bold; cursor: pointer; }
+        .bbs-content { padding: 15px; }
         .bbs-form { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
         .bbs-form input, .bbs-form textarea { border: 1px solid #ddd; border-radius: 8px; padding: 10px; font-size: 0.9rem; outline: none; -webkit-appearance: none; background: #fff; }
         .bbs-form button { background: #3498db; color: white; border: none; border-radius: 8px; padding: 12px; font-weight: bold; font-size: 1rem; cursor: pointer; }
@@ -104,6 +115,11 @@
     </style>
 </head>
 <body oncontextmenu="return false;">
+    <div id="orientation-alert">
+        <div style="font-size: 40px; margin-bottom: 10px;">📱</div>
+        <p style="font-weight: bold; color: #666;">このアプリは縦向き専用です<br>スマホを立てて操作してください</p>
+    </div>
+
     <div id="tap-guide" onclick="initAudio()"><div class="guide-circle"></div></div>
     
     <div id="header">
@@ -169,19 +185,21 @@
     </div>
 
     <div id="bbs-view" class="view-container hidden">
-        <div class="bbs-title-row">
-            <h3>💬 改善フィードバック</h3>
+        <div class="bbs-header">
+            <h3>💬 フィードバック</h3>
             <button class="back-btn" onclick="switchView('main')">操作に戻る</button>
         </div>
-        <div class="bbs-form">
-            <input type="text" id="bbs-name" placeholder="お名前（ニックネーム可）">
-            <textarea id="bbs-msg" rows="4" placeholder="改善してほしいところや感想を書いてね"></textarea>
-            <button id="bbs-send" onclick="sendPost()">送信する</button>
+        <div class="bbs-content">
+            <div class="bbs-form">
+                <input type="text" id="bbs-name" placeholder="お名前（ニックネーム可）">
+                <textarea id="bbs-msg" rows="4" placeholder="改善してほしいところや感想を書いてね"></textarea>
+                <button id="bbs-send" onclick="sendPost()">送信する</button>
+            </div>
+            <div id="bbs-list">
+                <p style="text-align: center; color: #999; font-size: 0.8rem;">読み込み中...</p>
+            </div>
         </div>
-        <div id="bbs-list">
-            <p style="text-align: center; color: #999; font-size: 0.8rem;">読み込み中...</p>
-        </div>
-        <div id="footer-ver">オカズコントローラー Ver 4.6.131</div>
+        <div id="footer-ver">オカズコントローラー Ver 4.6.132</div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
@@ -203,13 +221,13 @@
         function switchView(viewName) {
             triggerClickSound();
             if (viewName === 'bbs') {
+                document.getElementById('header').classList.add('hidden');
                 document.getElementById('main-view').classList.add('hidden');
                 document.getElementById('bbs-view').classList.remove('hidden');
-                document.getElementById('fb-nav-btn').classList.add('hidden');
             } else {
                 document.getElementById('bbs-view').classList.add('hidden');
+                document.getElementById('header').classList.remove('hidden');
                 document.getElementById('main-view').classList.remove('hidden');
-                document.getElementById('fb-nav-btn').classList.remove('hidden');
             }
         }
 
@@ -236,7 +254,7 @@
 
         function renderPosts(posts) {
             const list = document.getElementById('bbs-list');
-            if (posts.length === 0) {
+            if (!posts || posts.length === 0) {
                 list.innerHTML = `<p style="text-align: center; color: #999; font-size: 0.8rem;">まだ投稿はありません</p>`;
                 return;
             }
@@ -271,7 +289,7 @@
             if (lungFolder === "pleuritis") paths.extra_v = `./soundsource/${lungFolder}/friction_rub.wav`;
             let loaded = 0;
             Object.keys(paths).forEach(key => {
-                players[key] = new Tone.Player({ url: paths[key], volume: -Infinity, onload: () => { if (++loaded === 3) { status.innerText = "準備完了"; status.className = "status-ready"; startLungLoop(); }}, onerror: () => { status.innerText = "エラー"; } }).toDestination();
+                players[key] = new Tone.Player({ url: paths[key], volume: -Infinity, onload: () => { if (++loaded === 3) { status.innerText = "準備完了"; status.className = "status-ready"; startLungLoop(); }}, onerror: (e) => { console.error(`Error loading ${key}`, e); status.innerText = "エラー"; } }).toDestination();
             });
             loadHeartSound();
         }
@@ -330,6 +348,7 @@
         document.getElementById('heart-mute').addEventListener('click', () => { triggerClickSound(); heartVolumeState = (heartVolumeState + 1) % 4; document.getElementById('heart-mute-img').src = volIcons[heartVolumeState]; if (activePadId) setVolume(activePadId, true); });
         document.querySelectorAll('.lung-btn').forEach(btn => btn.addEventListener('click', () => { triggerClickSound(); lungFolder = btn.dataset.folder; document.querySelectorAll('.lung-btn').forEach(b => b.classList.toggle('active', b === btn)); loadLungSounds(); btn.scrollIntoView({ behavior: 'smooth', inline: 'center' }); }));
         document.querySelectorAll('.heart-btn').forEach(btn => btn.addEventListener('click', () => { triggerClickSound(); heartFolder = btn.dataset.folder; document.querySelectorAll('.heart-btn').forEach(b => b.classList.toggle('active', b === btn)); loadHeartSound(); btn.scrollIntoView({ behavior: 'smooth', inline: 'center' }); }));
+        
         document.querySelectorAll('.pad').forEach(p => {
             const id = parseInt(p.id.replace('pad-btn',''));
             p.addEventListener('pointerdown', (e) => { e.preventDefault(); if(!activePadId){ activePadId=id; setVolume(id,true); } });
