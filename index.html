@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="オカズコントローラー">
 
-    <title>オカズコントローラー Ver 4.6.150</title>
+    <title>オカズコントローラー Ver 4.6.151</title>
     <style>
         * {
             -webkit-touch-callout: none !important;
@@ -202,7 +202,7 @@
         <div class="bbs-content">
             <div id="bbs-list"></div>
         </div>
-        <div id="footer-ver">オカズコントローラー Ver 4.6.150</div>
+        <div id="footer-ver">オカズコントローラー Ver 4.6.151</div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
@@ -255,24 +255,57 @@
         function loadLungSounds() {
             const status = document.getElementById('status');
             status.innerText = "読込中..."; status.className = "status-loading";
-            ['normal_v','extra_v','bronchial'].forEach(k => { if(players[k]) players[k].dispose(); });
+
+            // 読込フリーズ対策：既存の再生を止め、プレイヤーを完全に破棄
+            Tone.Transport.stop();
+            ['normal_v','extra_v','bronchial'].forEach(k => { 
+                if(players[k]) {
+                    players[k].stop();
+                    players[k].dispose();
+                    players[k] = null;
+                }
+            });
+
             const paths = { normal_v: `./soundsource/normal/vesicular.wav`, extra_v: `./soundsource/${lungFolder}/vesicular.wav`, bronchial: `./soundsource/${lungFolder}/bronchial.wav` };
             if (lungFolder === "asthma") paths.extra_v = `./soundsource/${lungFolder}/wheeze.wav`;
             if (lungFolder === "fc") paths.extra_v = `./soundsource/${lungFolder}/fine_crackles.wav`;
             if (lungFolder === "pleuritis") paths.extra_v = `./soundsource/${lungFolder}/friction_rub.wav`;
+            
             let loaded = 0;
-            Object.keys(paths).forEach(key => {
-                players[key] = new Tone.Player({ url: paths[key], volume: -Infinity, onload: () => { if (++loaded === 3) { status.innerText = "準備完了"; status.className = "status-ready"; startLungLoop(); }}, onerror: (e) => { console.error(e); status.innerText = "エラー"; }}).toDestination();
+            const keys = Object.keys(paths);
+            keys.forEach(key => {
+                players[key] = new Tone.Player({ 
+                    url: paths[key], 
+                    volume: -Infinity, 
+                    onload: () => { 
+                        if (++loaded === keys.length) { 
+                            status.innerText = "準備完了"; status.className = "status-ready"; 
+                            startLungLoop(); 
+                        }
+                    }, 
+                    onerror: (e) => { 
+                        console.error(`Audio load error [${key}]:`, e); 
+                        status.innerText = "エラー"; 
+                    }
+                }).toDestination();
             });
             loadHeartSound();
         }
 
         function loadHeartSound() {
-            if (players.heart) players.heart.dispose();
-            players.heart = new Tone.Player({ url: `./soundsource/heart/${heartFolder}.wav`, volume: -Infinity, onload: () => {
-                if (heartLoop) heartLoop.dispose();
-                heartLoop = new Tone.Loop(time => players.heart.start(time), 60/hrValue).start(0);
-            }}).toDestination();
+            if (players.heart) {
+                players.heart.stop();
+                players.heart.dispose();
+                players.heart = null;
+            }
+            players.heart = new Tone.Player({ 
+                url: `./soundsource/heart/${heartFolder}.wav`, 
+                volume: -Infinity, 
+                onload: () => {
+                    if (heartLoop) heartLoop.dispose();
+                    heartLoop = new Tone.Loop(time => players.heart && players.heart.start(time), 60/hrValue).start(0);
+                }
+            }).toDestination();
         }
 
         function startLungLoop() {
@@ -281,9 +314,11 @@
                 ['normal_v','extra_v','bronchial'].forEach(k => players[k] && players[k].start(time));
                 Tone.Draw.schedule(() => {
                     const bg = document.getElementById('breathing-group');
-                    bg.classList.remove('breathing-trigger', 'breathing-asthma');
-                    void bg.offsetWidth;
-                    bg.classList.add(lungFolder === "asthma" ? 'breathing-asthma' : 'breathing-trigger');
+                    if (bg) {
+                        bg.classList.remove('breathing-trigger', 'breathing-asthma');
+                        void bg.offsetWidth;
+                        bg.classList.add(lungFolder === "asthma" ? 'breathing-asthma' : 'breathing-trigger');
+                    }
                 }, time);
             }, 60/rrValue).start(0);
             Tone.Transport.start();
@@ -295,7 +330,7 @@
             if (isOn) {
                 let lungVol = volLevels[lungVolumeState];
                 
-                // 気胸側の減衰率を -30dB に強化 (ほぼ無音化)
+                // 【絶対変更禁止エリア】気胸側の減衰率を -30dB に固定 (Ver 4.6.150より継承)
                 let attenuation = 0;
                 const leftSide = [1, 3, 5, 7];
                 const rightSide = [2, 4, 6, 8];
