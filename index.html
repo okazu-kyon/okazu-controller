@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="オカズコントローラー">
 
-    <title>オカズコントローラー Ver 4.6.151</title>
+    <title>オカズコントローラー Ver 4.6.152</title>
     <style>
         * {
             -webkit-touch-callout: none !important;
@@ -48,19 +48,59 @@
             #orientation-alert { display: flex; }
         }
         
+        /* スタートガイド画面の刷新 */
         #tap-guide { 
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(255,255,255,0.9); z-index: 20000; 
+            background: rgba(0,0,0,0.6); z-index: 20000; 
             display: flex; align-items: center; justify-content: center;
             transition: opacity 0.6s ease, visibility 0.6s;
-            cursor: pointer;
         }
         #tap-guide.fade-out { opacity: 0; visibility: hidden; pointer-events: none; }
 
-        .guide-circle { width: 150px; height: 150px; background: rgba(214, 48, 49, 0.2); border: 6px solid #d63031; border-radius: 50%; display: flex; align-items: center; justify-content: center; animation: guide-pulse-animation 1.2s infinite; pointer-events: none; }
-        .guide-circle::after { content: "ここを\Aタッチ"; font-size: 22px; font-weight: 900; color: #d63031; white-space: pre; line-height: 1.2; text-align: center; }
-        @keyframes guide-pulse-animation { 0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(214, 48, 49, 0.7); } 70% { transform: scale(1.1); box-shadow: 0 0 0 40px rgba(214, 48, 49, 0); } 100% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(214, 48, 49, 0); } }
-        
+        .guide-panel {
+            width: 85%;
+            max-width: 320px;
+            background: #fff;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            text-align: left;
+        }
+        .guide-panel h2 {
+            font-size: 1.2rem;
+            color: #333;
+            margin-top: 0;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            text-align: center;
+        }
+        .guide-panel ul {
+            padding-left: 20px;
+            margin: 20px 0;
+        }
+        .guide-panel li {
+            font-size: 0.9rem;
+            color: #555;
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+        .start-btn {
+            width: 100%;
+            padding: 15px;
+            background: #3498db;
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #2980b9;
+        }
+        .start-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #2980b9;
+        }
+
         #header { background: #fff; padding: calc(8px + env(safe-area-inset-top)) 15px 5px 15px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; border-bottom: 1px solid #f0f0f0; position: relative; z-index: 1000; transition: opacity 0.3s ease; }
         #header-right { display: flex; align-items: center; gap: 6px; }
         #status { font-size: 0.7rem; font-weight: bold; padding: 4px 10px; border-radius: 20px; min-width: 60px; }
@@ -130,7 +170,17 @@
         <p style="font-weight: bold; color: #666;">このアプリは縦向き専用です<br>スマホを立てて操作してください</p>
     </div>
 
-    <div id="tap-guide" onclick="initAudio()"><div class="guide-circle"></div></div>
+    <div id="tap-guide">
+        <div class="guide-panel">
+            <h2>【使用方法】</h2>
+            <ul>
+                <li><strong>聴診</strong>：パット（円）をタップし続ける（またはキーボードの1〜9を押す）と音が鳴ります。</li>
+                <li><strong>切り替え</strong>：下部のボタンで症例（肺音・心音）を変更できます。</li>
+                <li><strong>調節</strong>：上部のスライダーで回数や音量を調整可能です。</li>
+            </ul>
+            <button class="start-btn" onclick="initAudio()">了解して開始する</button>
+        </div>
+    </div>
     
     <div id="header">
         <div id="status" class="status-waiting">待機中</div>
@@ -202,7 +252,7 @@
         <div class="bbs-content">
             <div id="bbs-list"></div>
         </div>
-        <div id="footer-ver">オカズコントローラー Ver 4.6.151</div>
+        <div id="footer-ver">オカズコントローラー Ver 4.6.152</div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
@@ -256,7 +306,6 @@
             const status = document.getElementById('status');
             status.innerText = "読込中..."; status.className = "status-loading";
 
-            // 読込フリーズ対策：既存の再生を止め、プレイヤーを完全に破棄
             Tone.Transport.stop();
             ['normal_v','extra_v','bronchial'].forEach(k => { 
                 if(players[k]) {
@@ -330,7 +379,7 @@
             if (isOn) {
                 let lungVol = volLevels[lungVolumeState];
                 
-                // 【絶対変更禁止エリア】気胸側の減衰率を -30dB に固定 (Ver 4.6.150より継承)
+                // 【絶対変更禁止エリア】気胸側の減衰率を -30dB に固定
                 let attenuation = 0;
                 const leftSide = [1, 3, 5, 7];
                 const rightSide = [2, 4, 6, 8];
@@ -349,7 +398,8 @@
                 } else if (players.heart) { 
                     players.heart.volume.rampTo(-Infinity, 0.1); 
                 }
-                document.getElementById(`pad-btn${id}`).classList.add('active-pad');
+                const pad = document.getElementById(`pad-btn${id}`);
+                if (pad) pad.classList.add('active-pad');
             } else {
                 ['normal_v','extra_v','bronchial','heart'].forEach(k => players[k] && players[k].volume.rampTo(-Infinity, 0.2));
                 document.querySelectorAll('.pad').forEach(p => p.classList.remove('active-pad'));
@@ -375,6 +425,31 @@
             p.addEventListener('pointerdown', (e) => { e.preventDefault(); activePadId=id; setVolume(id,true); });
             const stop = (e) => { e.preventDefault(); if(activePadId==id){ setVolume(id,false); activePadId=null; } };
             ['pointerup','pointerleave','pointercancel'].forEach(ev => p.addEventListener(ev, stop));
+        });
+
+        /* キーボード操作（Bluetoothキーボード等）への対応 */
+        window.addEventListener('keydown', (e) => {
+            if (!audioStarted) return;
+            const key = e.key;
+            if (key >= '1' && key <= '9') {
+                const id = parseInt(key);
+                if (activePadId !== id) {
+                    activePadId = id;
+                    setVolume(id, true);
+                }
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (!audioStarted) return;
+            const key = e.key;
+            if (key >= '1' && key <= '9') {
+                const id = parseInt(key);
+                if (activePadId === id) {
+                    setVolume(id, false);
+                    activePadId = null;
+                }
+            }
         });
     </script>
 </body>
