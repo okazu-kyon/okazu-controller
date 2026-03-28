@@ -310,7 +310,7 @@
             ['normal_v','extra_v','bronchial'].forEach(k => { 
                 if(players[k]) {
                     players[k].stop();
-                    players[k].dispose();
+                    // players[k].dispose(); // Tone.jsのキャッシュバグ回避のため破棄しない
                     players[k] = null;
                 }
             });
@@ -344,7 +344,7 @@
         function loadHeartSound() {
             if (players.heart) {
                 players.heart.stop();
-                players.heart.dispose();
+                // players.heart.dispose(); // Tone.jsのキャッシュバグ回避のため破棄しない
                 players.heart = null;
             }
             players.heart = new Tone.Player({ 
