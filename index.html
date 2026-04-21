@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="オカズコントローラー">
 
-    <title>オカズコントローラー Ver 4.9.1</title>
+    <title>オカズコントローラー Ver 5.0.2</title>
     <style>
         * {
             -webkit-touch-callout: none !important;
@@ -316,21 +316,8 @@
             pointer-events: none;
         }
 
-        .breathing-trigger {
-            animation: realistic-breath var(--move-duration) cubic-bezier(0.45, 0.05, 0.55, 0.95) forwards;
-        }
-
-        @keyframes realistic-breath {
-
-            0%,
-            100% {
-                transform: scale(1.0) translateY(0px);
-            }
-
-            52% {
-                transform: scale(var(--x-fixed), calc(1 + (var(--x-fixed) - 1) * 0.4)) translateY(var(--y-fixed));
-            }
-        }
+        .breathing-trigger { animation: realistic-breath var(--move-duration) cubic-bezier(0.3, 0, 0.4, 1) forwards; }
+        @keyframes realistic-breath { 0%, 100% { transform: scale(1.0) translateY(0px); } 57% { transform: scale(var(--x-fixed), calc(1 + (var(--x-fixed) - 1) * 0.4)) translateY(var(--y-fixed)); } }
 
         .breathing-asthma {
             animation: asthma-breath 3.2s cubic-bezier(0.45, 0.05, 0.55, 0.95) forwards;
@@ -639,7 +626,7 @@
             <div id="bbs-list"></div>
             <button class="admin-toggle" onclick="toggleAdminMode()">🔧</button>
         </div>
-        <div id="footer-ver">オカズコントローラー Ver 4.9.1</div>
+        <div id="footer-ver">オカズコントローラー Ver 5.0.2</div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
@@ -906,7 +893,8 @@
         }
 
         function updateAnimations() {
-            let dur = (lungFolder === "asthma") ? 3.2 : (rrValue <= 18 ? 2.5 : 60 / rrValue);
+            // 喘息はこだわりの 3.2s 固定、それ以外は RR に完全連動
+            let dur = (lungFolder === "asthma") ? 3.2 : (60 / rrValue);
             document.documentElement.style.setProperty('--move-duration', `${dur}s`);
         }
 
