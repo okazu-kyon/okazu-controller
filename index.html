@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="オカズコントローラー">
 
-    <title>オカズコントローラー Ver 4.7.1</title>
+    <title>オカズコントローラー Ver 4.7.2</title>
     <style>
         * {
             -webkit-touch-callout: none !important;
@@ -252,7 +252,7 @@
         <div class="bbs-content">
             <div id="bbs-list"></div>
         </div>
-        <div id="footer-ver">オカズコントローラー Ver 4.7.1</div>
+        <div id="footer-ver">オカズコントローラー Ver 4.7.2</div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
@@ -369,9 +369,20 @@
                 Tone.Draw.schedule(() => {
                     const bg = document.getElementById('breathing-group');
                     if (bg) {
-                        bg.classList.remove('breathing-trigger', 'breathing-asthma');
-                        void bg.offsetWidth;
-                        bg.classList.add(lungFolder === "asthma" ? 'breathing-asthma' : 'breathing-trigger');
+                        const targetClass = (lungFolder === "asthma") ? 'breathing-asthma' : 'breathing-trigger';
+                        
+                        // 症例が変更された場合のみクラスを付け替え
+                        if (!bg.classList.contains(targetClass)) {
+                            bg.classList.remove('breathing-trigger', 'breathing-asthma');
+                            bg.classList.add(targetClass);
+                        }
+
+                        // アニメーションの先頭への巻き戻し
+                        const anims = bg.getAnimations();
+                        anims.forEach(anim => {
+                            anim.currentTime = 0;
+                            anim.play();
+                        });
                     }
                 }, time);
             }, 60/rrValue).start(0);
@@ -412,7 +423,9 @@
         }
 
         function updateAnimations() {
-            let dur = (lungFolder === "asthma") ? 3.2 : (rrValue <= 18 ? 2.5 : 60/rrValue);
+            let dur = 60/rrValue;
+            // 喘息の時は比率を保つため特別な処理は不要（keyframes側でピークを調整済みのため）
+            // ただし、ユーザーがこだわった「3.2s」をベースにRRで伸縮させる
             document.documentElement.style.setProperty('--move-duration', `${dur}s`);
         }
 
