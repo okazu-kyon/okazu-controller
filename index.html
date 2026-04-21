@@ -136,12 +136,40 @@
             overflow: hidden; 
         }
         
-        #breathing-group { position: relative; width: 100%; line-height: 0; transform-origin: 50% 40%; will-change: transform; --y-fixed: -8px; --x-fixed: 1.06; }
+        #breathing-group { 
+            position: relative; width: 100%; line-height: 0; 
+            transform-origin: 50% 40%; will-change: transform; 
+            --y-fixed: -8px; --x-fixed: 1.06;
+        }
         #body-img { width: 100%; height: auto; pointer-events: none; }
-        .breathing-trigger { animation: realistic-breath var(--move-duration) cubic-bezier(0.45, 0.05, 0.55, 0.95) forwards; }
-        @keyframes realistic-breath { 0%, 100% { transform: scale(1.0) translateY(0px); } 52% { transform: scale(var(--x-fixed), calc(1 + (var(--x-fixed) - 1) * 0.4)) translateY(var(--y-fixed)); } }
-        .breathing-asthma { animation: asthma-breath 3.2s cubic-bezier(0.45, 0.05, 0.55, 0.95) forwards; }
-        @keyframes asthma-breath { 0%, 100% { transform: scale(1.0) translateY(0px); } 21.9% { transform: scale(var(--x-fixed), calc(1 + (var(--x-fixed) - 1) * 0.4)) translateY(var(--y-fixed)); } }
+        
+        .breathing-trigger { 
+            /* animation-name は JS で動的に設定 */
+            animation-duration: var(--move-duration);
+            animation-timing-function: cubic-bezier(0.42, 0, 0.58, 1);
+            animation-fill-mode: forwards;
+        }
+
+        /* 正常呼吸: 吸気40%, 呼気50%, 休止10% */
+        @keyframes breath-normal { 
+            0% { transform: scale(1.0) translateY(0px); } 
+            40% { transform: scale(var(--x-fixed), calc(1 + (var(--x-fixed) - 1) * 0.4)) translateY(var(--y-fixed)); } 
+            90%, 100% { transform: scale(1.0) translateY(0px); } 
+        }
+
+        /* 喘息（呼気延長）: 吸気25%, 呼気65%, 休止10% */
+        @keyframes breath-asthma { 
+            0% { transform: scale(1.0) translateY(0px); } 
+            25% { transform: scale(var(--x-fixed), calc(1 + (var(--x-fixed) - 1) * 0.4)) translateY(var(--y-fixed)); } 
+            90%, 100% { transform: scale(1.0) translateY(0px); } 
+        }
+
+        /* 拘束性障害（浅く速いイメージ）: 吸気45%, 呼気45%, 休止10% */
+        @keyframes breath-shallow { 
+            0% { transform: scale(1.0) translateY(0px); } 
+            45% { transform: scale(var(--x-fixed), calc(1 + (var(--x-fixed) - 1) * 0.4)) translateY(var(--y-fixed)); } 
+            90%, 100% { transform: scale(1.0) translateY(0px); } 
+        }
 
         .pad { position: absolute; width: 13%; height: 9%; background: rgba(255, 255, 255, 0); border: 2px solid white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1rem; color: white; cursor: pointer; z-index: 1010; transform: translate(-50%, -50%); }
         .active-pad { background: rgba(231, 76, 60, 0.8) !important; border-color: #ffcccc; }
@@ -360,13 +388,18 @@
         function startLungLoop() {
             if (masterLoop) masterLoop.dispose();
             masterLoop = new Tone.Loop(time => {
-                ['normal_v','extra_v','bronchial'].forEach(k => players[k] && players[k].start(time));
+                ['normal_v','extra_v','bronchial'].forEach(k => {
+                    if (players[k] && players[k].buffer.loaded) {
+                        players[k].start(time);
+                    }
+                });
+                
                 Tone.Draw.schedule(() => {
                     const bg = document.getElementById('breathing-group');
                     if (bg) {
-                        bg.classList.remove('breathing-trigger', 'breathing-asthma');
+                        bg.classList.remove('breathing-trigger');
                         void bg.offsetWidth;
-                        bg.classList.add(lungFolder === "asthma" ? 'breathing-asthma' : 'breathing-trigger');
+                        bg.classList.add('breathing-trigger');
                     }
                 }, time);
             }, 60/rrValue).start(0);
@@ -407,8 +440,31 @@
         }
 
         function updateAnimations() {
-            let dur = (lungFolder === "asthma") ? 3.2 : (rrValue <= 18 ? 2.5 : 60/rrValue);
-            document.documentElement.style.setProperty('--move-duration', `${dur}s`);
+            const cycleTime = 60 / rrValue;
+            let animName = "breath-normal";
+            let dur = cycleTime;
+
+            if (lungFolder === "asthma") {
+                animName = "breath-asthma";
+            } else if (lungFolder === "fc") {
+                animName = "breath-shallow";
+            }
+
+            // CSS変数の更新
+            const root = document.documentElement;
+            root.style.setProperty('--move-duration', `${dur}s`);
+            
+            // アニメーション名の適用
+            const bg = document.getElementById('breathing-group');
+            if (bg) bg.style.animationName = animName;
+
+            // 音源の再生速度（playbackRate）を同期
+            ['normal_v', 'extra_v', 'bronchial'].forEach(k => {
+                const p = players[k];
+                if (p && p.buffer.loaded) {
+                    p.playbackRate = p.buffer.duration / cycleTime;
+                }
+            });
         }
 
         function triggerClickSound() { if (audioStarted && clickSynth) clickSynth.triggerAttackRelease("C7", "32n"); }
