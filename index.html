@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="オカズコントローラー">
 
-    <title>オカズコントローラー Ver 4.8.0</title>
+    <title>オカズコントローラー Ver 4.7.1</title>
     <style>
         * {
             -webkit-touch-callout: none !important;
@@ -194,7 +194,7 @@
         <div class="control-panel">
             <div class="slider-row">
                 <label>呼吸</label>
-                <input type="range" id="rr-slider" min="10" max="30" step="1" value="18">
+                <input type="range" id="rr-slider" min="10" max="25" step="1" value="18">
                 <div class="val-disp"><span id="rr-val">18</span><small>回</small></div>
                 <button id="lung-mute" class="mute-btn"><img src="vol_on.png" id="lung-mute-img"></button>
             </div>
@@ -252,7 +252,7 @@
         <div class="bbs-content">
             <div id="bbs-list"></div>
         </div>
-        <div id="footer-ver">オカズコントローラー Ver 4.8.0</div>
+        <div id="footer-ver">オカズコントローラー Ver 4.7.1</div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
@@ -328,11 +328,9 @@
             let loaded = 0;
             const keys = Object.keys(paths);
             keys.forEach(key => {
-                players[key] = new Tone.GrainPlayer({ 
+                players[key] = new Tone.Player({ 
                     url: paths[key], 
                     volume: -Infinity, 
-                    overlap: 0.1, // 滑らかさのためのオーバーラップ
-                    grainSize: 0.2, // 粒の大きさ
                     onload: () => { 
                         if (++loaded === keys.length) { 
                             status.innerText = "準備完了"; status.className = "status-ready"; 
@@ -343,7 +341,7 @@
                         console.error(`Audio load error [${key}]:`, e); 
                         status.innerText = "エラー"; 
                     }
-                }).connect(lungFilter);
+                }).connect(lungFilter); // フィルタに接続
             });
             loadHeartSound();
         }
@@ -414,18 +412,8 @@
         }
 
         function updateAnimations() {
-            const cycleTime = 60 / rrValue;
-            let dur = (lungFolder === "asthma") ? 3.2 : (rrValue <= 18 ? 2.5 : cycleTime);
+            let dur = (lungFolder === "asthma") ? 3.2 : (rrValue <= 18 ? 2.5 : 60/rrValue);
             document.documentElement.style.setProperty('--move-duration', `${dur}s`);
-
-            // 音源の再生速度（playbackRate）を同期（ピッチは GrainPlayer で維持）
-            ['normal_v', 'extra_v', 'bronchial'].forEach(k => {
-                const p = players[k];
-                if (p && p.buffer.loaded) {
-                    // playbackRate = 元の長さ / 目標の長さ（1サイクルの時間）
-                    p.playbackRate = p.buffer.duration / cycleTime;
-                }
-            });
         }
 
         function triggerClickSound() { if (audioStarted && clickSynth) clickSynth.triggerAttackRelease("C7", "32n"); }
