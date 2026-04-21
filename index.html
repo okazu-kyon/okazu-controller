@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="オカズコントローラー">
 
-    <title>オカズコントローラー Ver 4.9.1</title>
+    <title>オカズコントローラー Ver 5.0.1</title>
     <style>
         * {
             -webkit-touch-callout: none !important;
@@ -536,9 +536,26 @@
         #footer-ver {
             padding: 20px 0 calc(20px + env(safe-area-inset-bottom));
             font-size: 0.6rem;
-            color: #ccc;
+            color: #555;
             text-align: center;
         }
+
+        /* ダークモード用カラー上書き */
+        body { background: #000; color: #eee; }
+        #header, .control-panel, .selector-container, #bbs-view, .bbs-header, .bbs-form, .bbs-content { background: #1a1a1a !important; color: #eee !important; border-color: #333 !important; }
+        .post-card { background: #2a2a2a !important; border-color: #444 !important; color: #eee !important; }
+        .nav-btn, .mute-btn, .btn, .back-btn { background: #333 !important; color: #eee !important; border: 1px solid #444 !important; }
+        .btn.active, .back-btn, .bbs-form button { background: #3498db !important; }
+        .btn.heart-btn.active { background: #e74c3c !important; }
+        .val-disp { color: #d4af37 !important; } /* 数値はゴールドで視認性アップ */
+        .label-tag { color: #888 !important; }
+        input[type="range"] { background: #333 !important; }
+        #status.status-waiting { color: #888; }
+        .bbs-form input, .bbs-form textarea { background: #333 !important; color: #fff !important; border: 1px solid #555 !important; }
+        .mute-btn img { filter: invert(1); }
+        .pad { border-color: rgba(255,255,255,0.3) !important; color: rgba(255,255,255,0.5) !important; }
+        .active-pad { background: rgba(52, 152, 219, 0.4) !important; border-color: #3498db !important; }
+        #main-content { background: #0a0a0a !important; }
     </style>
 </head>
 
