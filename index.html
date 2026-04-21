@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="オカズコントローラー">
 
-    <title>オカズコントローラー Ver 4.7.0</title>
+    <title>オカズコントローラー Ver 4.7.1</title>
     <style>
         * {
             -webkit-touch-callout: none !important;
@@ -252,7 +252,7 @@
         <div class="bbs-content">
             <div id="bbs-list"></div>
         </div>
-        <div id="footer-ver">オカズコントローラー Ver 4.7.0</div>
+        <div id="footer-ver">オカズコントローラー Ver 4.7.1</div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
@@ -260,6 +260,7 @@
         const GAS_URL = "https://script.google.com/macros/s/AKfycbyhfuZU3xbdp-b203YDrDrjy0PuJo7kOoCwjN5dkhp5yZmj6NE9JzSxIchg4R14ufMP/exec";
         let audioStarted = false;
         let players = { normal_v: null, extra_v: null, bronchial: null, heart: null };
+        let lungFilter = null; // 肺音用ローパスフィルター
         let clickSynth = null;
         let rrValue = 18, hrValue = 70;
         let lungFolder = "normal", heartFolder = "normal";
@@ -288,6 +289,10 @@
             await Tone.start();
             audioStarted = true;
             setTimeout(() => { document.getElementById('tap-guide').style.display = 'none'; }, 600);
+            
+            // 肺音用の低域通過フィルタ（1000Hz以上をカット）を初期化
+            lungFilter = new Tone.Filter(1000, "lowpass").toDestination();
+            
             clickSynth = new Tone.FMSynth({ modulationIndex: 2, envelope: { attack: 0.001, decay: 0.1, sustain: 0.01, release: 0.1 }, modulation: { type: "square" } }).toDestination();
             clickSynth.volume.value = -12;
             loadLungSounds();
@@ -336,7 +341,7 @@
                         console.error(`Audio load error [${key}]:`, e); 
                         status.innerText = "エラー"; 
                     }
-                }).toDestination();
+                }).connect(lungFilter); // フィルタに接続
             });
             loadHeartSound();
         }
