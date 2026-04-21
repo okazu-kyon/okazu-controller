@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="オカズコントローラー">
 
-    <title>オカズコントローラー Ver 4.7.1</title>
+    <title>オカズコントローラー Ver 4.9.0</title>
     <style>
         * {
             -webkit-touch-callout: none !important;
@@ -161,6 +161,14 @@
         .bbs-content { padding: 15px; }
         .post-card { background: white; border-radius: 8px; padding: 12px; margin-bottom: 10px; border: 1px solid #eee; }
         
+        /* フィードバック機能追加スタイル */
+        .bbs-form { padding: 15px; background: white; border-bottom: 2px solid #eee; display: flex; flex-direction: column; gap: 8px; align-items: stretch; }
+        .bbs-form input, .bbs-form textarea { width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.9rem; font-family: inherit; }
+        .bbs-form button { background: #3498db; color: white; border: none; padding: 10px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; cursor: pointer; }
+        .bbs-form button:disabled { background: #95a5a6; }
+        .delete-btn { background: #e74c3c; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; cursor: pointer; float: right; margin-left: 10px; margin-top: -2px; }
+        .admin-toggle { background: transparent; border: none; color: #ccc; font-size: 0.7rem; cursor: pointer; display: block; margin: 10px auto; padding: 5px; }
+
         #footer-ver { padding: 20px 0 calc(20px + env(safe-area-inset-bottom)); font-size: 0.6rem; color: #ccc; text-align: center; }
     </style>
 </head>
@@ -249,10 +257,16 @@
             <h3>💬 フィードバック</h3>
             <button class="back-btn" onclick="switchView('main')">操作に戻る</button>
         </div>
+        <div class="bbs-form">
+            <input type="text" id="bbs-name" placeholder="名前 (任意)" maxlength="20">
+            <textarea id="bbs-msg" placeholder="コメントを入力" rows="2" maxlength="200"></textarea>
+            <button onclick="postMessage()" id="bbs-submit-btn">送信する</button>
+        </div>
         <div class="bbs-content">
             <div id="bbs-list"></div>
+            <button class="admin-toggle" onclick="toggleAdminMode()">🔧</button>
         </div>
-        <div id="footer-ver">オカズコントローラー Ver 4.7.1</div>
+        <div id="footer-ver">オカズコントローラー Ver 4.9.0</div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
@@ -299,12 +313,103 @@
             fetchPosts();
         }
 
+        let isAdminMode = false;
+        let postsData = [];
+
+        function toggleAdminMode() {
+            if (!isAdminMode) {
+                const pwd = prompt("管理者パスワードを入力してください");
+                // ※ ここではブラウザ上の簡易パスワードですが、GAS側でも確認することを推奨します。
+                if (pwd === "admin123") {
+                    isAdminMode = true;
+                    alert("管理者モードを有効にしました。");
+                } else {
+                    if(pwd !== null) alert("パスワードが違います。");
+                    return;
+                }
+            } else {
+                isAdminMode = false;
+                alert("管理者モードを無効にしました。");
+            }
+            renderPosts();
+        }
+
         async function fetchPosts() {
             try {
                 const res = await fetch(GAS_URL);
-                const posts = await res.json();
-                document.getElementById('bbs-list').innerHTML = posts.map(p => `<div class="post-card"><div style="font-size:0.75rem; color:#999;">${p.name || '名無し'}</div><div style="font-size:0.9rem;">${p.message}</div></div>`).join('');
+                postsData = await res.json();
+                renderPosts();
             } catch (e) { console.error(e); }
+        }
+
+        function renderPosts() {
+            const list = document.getElementById('bbs-list');
+            if (!postsData || postsData.length === 0) {
+                list.innerHTML = '<p style="color:#999; font-size:0.8rem; text-align:center;">まだ書き込みがありません。</p>';
+                return;
+            }
+            list.innerHTML = postsData.map((p, index) => {
+                // GASから id が返却される想定、ない場合はフォールバックとしてindexを使用
+                const postId = p.id !== undefined ? p.id : index;
+                const delBtn = isAdminMode ? `<button class="delete-btn" onclick="deleteMessage('${postId}')">削除</button>` : '';
+                return `<div class="post-card">${delBtn}<div style="font-size:0.75rem; color:#999;">${p.name || '名無し'}</div><div style="font-size:0.9rem; white-space:pre-wrap; word-break:break-word;">${p.message}</div></div>`;
+            }).join('');
+        }
+
+        async function postMessage() {
+            const nameEl = document.getElementById('bbs-name');
+            const msgEl = document.getElementById('bbs-msg');
+            const btn = document.getElementById('bbs-submit-btn');
+            
+            const message = msgEl.value.trim();
+            if(!message) return alert("コメントを入力してください");
+            
+            btn.disabled = true;
+            btn.innerText = "送信中...";
+            
+            try {
+                const formData = new URLSearchParams();
+                formData.append('action', 'post');
+                formData.append('name', nameEl.value.trim() || '名無し');
+                formData.append('message', message);
+                
+                await fetch(GAS_URL, {
+                    method: 'POST',
+                    body: formData,
+                    mode: 'no-cors' // GAS用: no-corsで送信
+                });
+                
+                msgEl.value = '';
+                alert("送信しました！反映には少し時間がかかります。");
+                setTimeout(fetchPosts, 2000); // 反映待ちして再取得
+            } catch (e) {
+                console.error(e);
+                alert("送信に失敗しました");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "送信する";
+            }
+        }
+
+        async function deleteMessage(id) {
+            if(!confirm("この投稿を削除しますか？")) return;
+            try {
+                const formData = new URLSearchParams();
+                formData.append('action', 'delete');
+                formData.append('id', id);
+                
+                await fetch(GAS_URL, {
+                    method: 'POST',
+                    body: formData,
+                    mode: 'no-cors'
+                });
+                
+                alert("削除リクエストを送信しました！");
+                setTimeout(fetchPosts, 2000);
+            } catch(e) {
+                console.error(e);
+                alert("削除に失敗しました");
+            }
         }
 
         function loadLungSounds() {
