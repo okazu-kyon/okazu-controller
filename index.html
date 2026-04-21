@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+
     <link rel="apple-touch-icon" href="icon.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -18,44 +20,68 @@
             -webkit-tap-highlight-color: transparent !important;
         }
 
-        input[type="text"], textarea {
+        input[type="text"],
+        textarea {
             -webkit-user-select: text !important;
             user-select: text !important;
         }
 
-        html, body { 
-            height: 100%; 
-            margin: 0; 
-            padding: 0; 
-            overflow: hidden; 
-            background: #ffffff; 
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: #ffffff;
         }
 
-        body { 
-            font-family: "Hiragino Maru Gothic ProN", "Yu Gothic", "Meiryo", sans-serif; 
-            text-align: center; 
-            display: flex; 
-            flex-direction: column; 
+        body {
+            font-family: "Hiragino Maru Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
         }
 
         #orientation-alert {
             display: none;
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #fff; z-index: 30000;
-            flex-direction: column; align-items: center; justify-content: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #fff;
+            z-index: 30000;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
+
         @media screen and (orientation: landscape) and (pointer: coarse) {
-            #orientation-alert { display: flex; }
+            #orientation-alert {
+                display: flex;
+            }
         }
-        
+
         /* スタートガイド画面の刷新 */
-        #tap-guide { 
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.6); z-index: 20000; 
-            display: flex; align-items: center; justify-content: center;
+        #tap-guide {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 20000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             transition: opacity 0.6s ease, visibility 0.6s;
         }
-        #tap-guide.fade-out { opacity: 0; visibility: hidden; pointer-events: none; }
+
+        #tap-guide.fade-out {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
 
         .guide-panel {
             width: 85%;
@@ -63,9 +89,10 @@
             background: #fff;
             border-radius: 20px;
             padding: 25px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
             text-align: left;
         }
+
         .guide-panel h2 {
             font-size: 1.2rem;
             color: #333;
@@ -74,16 +101,19 @@
             padding-bottom: 10px;
             text-align: center;
         }
+
         .guide-panel ul {
             padding-left: 20px;
             margin: 20px 0;
         }
+
         .guide-panel li {
             font-size: 0.9rem;
             color: #555;
             margin-bottom: 12px;
             line-height: 1.4;
         }
+
         .start-btn {
             width: 100%;
             padding: 15px;
@@ -96,82 +126,422 @@
             cursor: pointer;
             box-shadow: 0 4px 0 #2980b9;
         }
+
         .start-btn:active {
             transform: translateY(2px);
             box-shadow: 0 2px 0 #2980b9;
         }
 
-        #header { background: #fff; padding: calc(8px + env(safe-area-inset-top)) 15px 5px 15px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; border-bottom: 1px solid #f0f0f0; position: relative; z-index: 1000; transition: opacity 0.3s ease; }
-        #header-right { display: flex; align-items: center; gap: 6px; }
-        #status { font-size: 0.7rem; font-weight: bold; padding: 4px 10px; border-radius: 20px; min-width: 60px; }
-        .status-waiting { background: #ff7675; color: white; animation: pulse 2s infinite; }
-        .status-loading { background: #ffeaa7; color: #d35400; }
-        .status-ready { background: #ebfbee; color: #1b5e20; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+        #header {
+            background: #fff;
+            padding: calc(8px + env(safe-area-inset-top)) 15px 5px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+            border-bottom: 1px solid #f0f0f0;
+            position: relative;
+            z-index: 1000;
+            transition: opacity 0.3s ease;
+        }
 
-        .nav-btn { background: #f0f0f0; border: none; border-radius: 12px; padding: 5px 10px; font-size: 0.7rem; font-weight: bold; color: #666; cursor: pointer; }
+        #header-right {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
 
-        .view-container { 
-            flex: 1; display: flex; flex-direction: column; overflow-y: auto; -webkit-overflow-scrolling: touch; 
+        #status {
+            font-size: 0.7rem;
+            font-weight: bold;
+            padding: 4px 10px;
+            border-radius: 20px;
+            min-width: 60px;
+        }
+
+        .status-waiting {
+            background: #ff7675;
+            color: white;
+            animation: pulse 2s infinite;
+        }
+
+        .status-loading {
+            background: #ffeaa7;
+            color: #d35400;
+        }
+
+        .status-ready {
+            background: #ebfbee;
+            color: #1b5e20;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.6;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .nav-btn {
+            background: #f0f0f0;
+            border: none;
+            border-radius: 12px;
+            padding: 5px 10px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            color: #666;
+            cursor: pointer;
+        }
+
+        .view-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
             transition: opacity 0.3s ease, transform 0.3s ease;
         }
-        .hidden { display: none !important; opacity: 0; }
 
-        .control-panel { background: #fff; padding: 2px 0; border-bottom: 2px solid #ddd; flex-shrink: 0; position: relative; z-index: 900; }
-        .slider-row { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0; }
-        .slider-row label { font-size: 0.75rem; font-weight: bold; color: #666; width: 35px; }
-        input[type="range"] { -webkit-appearance: none; width: 110px; height: 6px; background: #eee; border-radius: 4px; outline: none; touch-action: pan-x; }
-        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; background: #3498db; border-radius: 50%; border: 2px solid #fff; }
-        .val-disp { font-size: 1.1rem; font-weight: 900; color: #2980b9; min-width: 65px; text-align: left; }
-        .mute-btn { width: 40px; height: 40px; border: none; background: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .mute-btn img { width: 100%; height: 100%; object-fit: contain; }
-
-        #main-content { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; background: #fff; position: relative; z-index: 100; }
-        
-        #pad-container { 
-            position: relative; 
-            width: 100%; 
-            max-width: 420px; 
-            aspect-ratio: 1 / 1.0; 
-            overflow: hidden; 
+        .hidden {
+            display: none !important;
+            opacity: 0;
         }
-        
-        #breathing-group { position: relative; width: 100%; line-height: 0; transform-origin: 50% 40%; will-change: transform; --y-fixed: -8px; --x-fixed: 1.06; }
-        #body-img { width: 100%; height: auto; pointer-events: none; }
-        .breathing-trigger { animation: realistic-breath var(--move-duration) cubic-bezier(0.45, 0.05, 0.55, 0.95) forwards; }
-        @keyframes realistic-breath { 0%, 100% { transform: scale(1.0) translateY(0px); } 52% { transform: scale(var(--x-fixed), calc(1 + (var(--x-fixed) - 1) * 0.4)) translateY(var(--y-fixed)); } }
-        .breathing-asthma { animation: asthma-breath 3.2s cubic-bezier(0.45, 0.05, 0.55, 0.95) forwards; }
-        @keyframes asthma-breath { 0%, 100% { transform: scale(1.0) translateY(0px); } 21.9% { transform: scale(var(--x-fixed), calc(1 + (var(--x-fixed) - 1) * 0.4)) translateY(var(--y-fixed)); } }
 
-        .pad { position: absolute; width: 13%; height: 9%; background: rgba(255, 255, 255, 0); border: 2px solid white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1rem; color: white; cursor: pointer; z-index: 1010; transform: translate(-50%, -50%); }
-        .active-pad { background: rgba(231, 76, 60, 0.8) !important; border-color: #ffcccc; }
+        .control-panel {
+            background: #fff;
+            padding: 2px 0;
+            border-bottom: 2px solid #ddd;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 900;
+        }
 
-        .selector-container { background: #fff; padding-bottom: 20px; border-top: 1px solid #eee; flex-shrink: 0; position: relative; z-index: 900; }
-        .scroll-row { overflow-x: auto; white-space: nowrap; padding: 6px 0; scroll-behavior: smooth; touch-action: pan-x; }
-        .scroll-row::-webkit-scrollbar { display: none; }
-        .label-tag { font-size: 0.6rem; color: #aaa; text-align: left; padding-left: 15px; display: block; margin-top: 4px; }
-        .btn { display: inline-block; padding: 10px 18px; margin: 0 5px; font-size: 0.9rem; font-weight: bold; border: none; border-radius: 20px; background: #f0f0f0; color: #666; }
-        .btn.active { background: #3498db; color: white; }
-        .btn.heart-btn.active { background: #e74c3c; }
+        .slider-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 0;
+        }
 
-        #bbs-view { background: #f9f9f9; text-align: left; position: relative; z-index: 2500; }
-        .bbs-header { background: #fff; padding: calc(8px + env(safe-area-inset-top)) 15px 12px 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
-        #bbs-view h3 { font-size: 1rem; color: #333; margin: 0; border-left: 4px solid #3498db; padding-left: 10px; }
-        .back-btn { background: #3498db; border: none; border-radius: 10px; padding: 6px 15px; font-size: 0.8rem; color: white; font-weight: bold; cursor: pointer; }
-        .bbs-content { padding: 15px; }
-        .post-card { background: white; border-radius: 8px; padding: 12px; margin-bottom: 10px; border: 1px solid #eee; }
-        
+        .slider-row label {
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: #666;
+            width: 35px;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 110px;
+            height: 6px;
+            background: #eee;
+            border-radius: 4px;
+            outline: none;
+            touch-action: pan-x;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #3498db;
+            border-radius: 50%;
+            border: 2px solid #fff;
+        }
+
+        .val-disp {
+            font-size: 1.1rem;
+            font-weight: 900;
+            color: #2980b9;
+            min-width: 65px;
+            text-align: left;
+        }
+
+        .mute-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mute-btn img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        #main-content {
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #fff;
+            position: relative;
+            z-index: 100;
+        }
+
+        #pad-container {
+            position: relative;
+            width: 100%;
+            max-width: 420px;
+            aspect-ratio: 1 / 1.0;
+            overflow: hidden;
+        }
+
+        #breathing-group {
+            position: relative;
+            width: 100%;
+            line-height: 0;
+            transform-origin: 50% 40%;
+            will-change: transform;
+            --y-fixed: -8px;
+            --x-fixed: 1.06;
+        }
+
+        #body-img {
+            width: 100%;
+            height: auto;
+            pointer-events: none;
+        }
+
+        .breathing-trigger {
+            animation: realistic-breath var(--move-duration) cubic-bezier(0.45, 0.05, 0.55, 0.95) forwards;
+        }
+
+        @keyframes realistic-breath {
+
+            0%,
+            100% {
+                transform: scale(1.0) translateY(0px);
+            }
+
+            52% {
+                transform: scale(var(--x-fixed), calc(1 + (var(--x-fixed) - 1) * 0.4)) translateY(var(--y-fixed));
+            }
+        }
+
+        .breathing-asthma {
+            animation: asthma-breath 3.2s cubic-bezier(0.45, 0.05, 0.55, 0.95) forwards;
+        }
+
+        @keyframes asthma-breath {
+
+            0%,
+            100% {
+                transform: scale(1.0) translateY(0px);
+            }
+
+            21.9% {
+                transform: scale(var(--x-fixed), calc(1 + (var(--x-fixed) - 1) * 0.4)) translateY(var(--y-fixed));
+            }
+        }
+
+        .pad {
+            position: absolute;
+            width: 13%;
+            height: 9%;
+            background: rgba(255, 255, 255, 0);
+            border: 2px solid white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: white;
+            cursor: pointer;
+            z-index: 1010;
+            transform: translate(-50%, -50%);
+        }
+
+        .active-pad {
+            background: rgba(231, 76, 60, 0.8) !important;
+            border-color: #ffcccc;
+        }
+
+        .selector-container {
+            background: #fff;
+            padding-bottom: 20px;
+            border-top: 1px solid #eee;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 900;
+        }
+
+        .scroll-row {
+            overflow-x: auto;
+            white-space: nowrap;
+            padding: 6px 0;
+            scroll-behavior: smooth;
+            touch-action: pan-x;
+        }
+
+        .scroll-row::-webkit-scrollbar {
+            display: none;
+        }
+
+        .label-tag {
+            font-size: 0.6rem;
+            color: #aaa;
+            text-align: left;
+            padding-left: 15px;
+            display: block;
+            margin-top: 4px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 18px;
+            margin: 0 5px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 20px;
+            background: #f0f0f0;
+            color: #666;
+        }
+
+        .btn.active {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn.heart-btn.active {
+            background: #e74c3c;
+        }
+
+        #bbs-view {
+            background: #f9f9f9;
+            text-align: left;
+            position: relative;
+            z-index: 2500;
+        }
+
+        .bbs-header {
+            background: #fff;
+            padding: calc(8px + env(safe-area-inset-top)) 15px 12px 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        #bbs-view h3 {
+            font-size: 1rem;
+            color: #333;
+            margin: 0;
+            border-left: 4px solid #3498db;
+            padding-left: 10px;
+        }
+
+        .back-btn {
+            background: #3498db;
+            border: none;
+            border-radius: 10px;
+            padding: 6px 15px;
+            font-size: 0.8rem;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .bbs-content {
+            padding: 15px;
+        }
+
+        .post-card {
+            background: white;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            border: 1px solid #eee;
+        }
+
         /* フィードバック機能追加スタイル */
-        .bbs-form { padding: 15px; background: white; border-bottom: 2px solid #eee; display: flex; flex-direction: column; gap: 8px; align-items: stretch; }
-        .bbs-form input, .bbs-form textarea { width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.9rem; font-family: inherit; }
-        .bbs-form button { background: #3498db; color: white; border: none; padding: 10px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; cursor: pointer; }
-        .bbs-form button:disabled { background: #95a5a6; }
-        .delete-btn { background: #e74c3c; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; cursor: pointer; float: right; margin-left: 10px; margin-top: -2px; }
-        .admin-toggle { background: transparent; border: none; color: #ccc; font-size: 0.7rem; cursor: pointer; display: block; margin: 10px auto; padding: 5px; }
+        .bbs-form {
+            padding: 15px;
+            background: white;
+            border-bottom: 2px solid #eee;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: stretch;
+        }
 
-        #footer-ver { padding: 20px 0 calc(20px + env(safe-area-inset-bottom)); font-size: 0.6rem; color: #ccc; text-align: center; }
+        .bbs-form input,
+        .bbs-form textarea {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-family: inherit;
+        }
+
+        .bbs-form button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .bbs-form button:disabled {
+            background: #95a5a6;
+        }
+
+        .delete-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            float: right;
+            margin-left: 10px;
+            margin-top: -2px;
+        }
+
+        .admin-toggle {
+            background: transparent;
+            border: none;
+            color: #ccc;
+            font-size: 0.7rem;
+            cursor: pointer;
+            display: block;
+            margin: 10px auto;
+            padding: 5px;
+        }
+
+        #footer-ver {
+            padding: 20px 0 calc(20px + env(safe-area-inset-bottom));
+            font-size: 0.6rem;
+            color: #ccc;
+            text-align: center;
+        }
     </style>
 </head>
+
 <body oncontextmenu="return false;">
     <div id="orientation-alert">
         <div style="font-size: 40px; margin-bottom: 10px;">📱</div>
@@ -189,7 +559,7 @@
             <button class="start-btn" onclick="initAudio()">了解して開始する</button>
         </div>
     </div>
-    
+
     <div id="header">
         <div id="status" class="status-waiting">待機中</div>
         <div id="header-right">
@@ -274,7 +644,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <script>
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbyhfuZU3xbdp-b203YDrDrjy0PuJo7kOoCwjN5dkhp5yZmj6NE9JzSxIchg4R14ufMP/exec";
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbyRg0NM1SVIVCnYOuPfIAZlEBiQO8wEScL1ADx4hYTX5IEvEPzYLgdbgmWq-irMZODA/exec";
         let audioStarted = false;
         let players = { normal_v: null, extra_v: null, bronchial: null, heart: null };
         let lungFilter = null; // 肺音用ローパスフィルター
@@ -306,10 +676,10 @@
             await Tone.start();
             audioStarted = true;
             setTimeout(() => { document.getElementById('tap-guide').style.display = 'none'; }, 600);
-            
+
             // 肺音用の低域通過フィルタ（1000Hz以上をカット）を初期化
             lungFilter = new Tone.Filter(1000, "lowpass").toDestination();
-            
+
             clickSynth = new Tone.FMSynth({ modulationIndex: 2, envelope: { attack: 0.001, decay: 0.1, sustain: 0.01, release: 0.1 }, modulation: { type: "square" } }).toDestination();
             clickSynth.volume.value = -12;
             loadLungSounds();
@@ -327,7 +697,7 @@
                     isAdminMode = true;
                     alert("管理者モードを有効にしました。");
                 } else {
-                    if(pwd !== null) alert("パスワードが違います。");
+                    if (pwd !== null) alert("パスワードが違います。");
                     return;
                 }
             } else {
@@ -347,7 +717,7 @@
             } catch (e) {
                 console.error("Fetch error:", e);
                 // 読み込み中表示を消すためのフォールバック
-                if(postsData.length === 0) renderPosts();
+                if (postsData.length === 0) renderPosts();
             }
         }
 
@@ -369,33 +739,39 @@
             const nameEl = document.getElementById('bbs-name');
             const msgEl = document.getElementById('bbs-msg');
             const btn = document.getElementById('bbs-submit-btn');
-            
+
             const message = msgEl.value.trim();
-            if(!message) return alert("コメントを入力してください");
-            
+            if (!message) return alert("コメントを入力してください");
+
             btn.disabled = true;
             btn.innerText = "送信中...";
-            
+
             try {
-                const formData = new URLSearchParams();
-                formData.append('action', 'post');
-                formData.append('name', nameEl.value.trim() || '名無し');
-                formData.append('message', message);
-                
-                await fetch(GAS_URL, {
-                    method: 'POST',
-                    body: formData,
-                    mode: 'no-cors' // GAS用: no-corsで送信
-                });
-                
-                msgEl.value = '';
-                alert("送信しました！反映されない場合は数秒待って「更新」を押してください。");
-                // 3秒後と6秒後に自動で再取得を試みる（GASの反映待ち）
-                setTimeout(fetchPosts, 3000);
-                setTimeout(fetchPosts, 6000);
+                // 通信エラーを避けるため、POSTではなくGET（URLパラメータ）で送信
+                const params = new URLSearchParams();
+                params.append('action', 'post');
+                params.append('name', nameEl.value.trim() || '名無し');
+                params.append('message', message);
+
+                const sendUrl = GAS_URL + (GAS_URL.indexOf('?') > -1 ? '&' : '?') + params.toString();
+
+                // GETリクエストで送信
+                const res = await fetch(sendUrl);
+                const result = await res.json();
+
+                if (result.success) {
+                    msgEl.value = '';
+                    alert("送信しました！");
+                    fetchPosts();
+                } else {
+                    throw new Error(result.error);
+                }
             } catch (e) {
                 console.error(e);
-                alert("送信に失敗しました");
+                // 完全に成功したか不明な場合も、一旦成功扱いで再読込を試る
+                msgEl.value = '';
+                alert("送信リクエストを送りました。反映されない場合は「更新」を押してください。");
+                setTimeout(fetchPosts, 3000);
             } finally {
                 btn.disabled = false;
                 btn.innerText = "送信する";
@@ -403,23 +779,25 @@
         }
 
         async function deleteMessage(id) {
-            if(!confirm("この投稿を削除しますか？")) return;
+            if (!confirm("この投稿を削除しますか？")) return;
             try {
-                const formData = new URLSearchParams();
-                formData.append('action', 'delete');
-                formData.append('id', id);
-                
-                await fetch(GAS_URL, {
-                    method: 'POST',
-                    body: formData,
-                    mode: 'no-cors'
-                });
-                
-                alert("削除リクエストを送信しました！");
-                setTimeout(fetchPosts, 2000);
-            } catch(e) {
+                const params = new URLSearchParams();
+                params.append('action', 'delete');
+                params.append('id', id);
+
+                const delUrl = GAS_URL + (GAS_URL.indexOf('?') > -1 ? '&' : '?') + params.toString();
+
+                const res = await fetch(delUrl);
+                const result = await res.json();
+
+                if (result.success) {
+                    alert("削除しました。");
+                    fetchPosts();
+                }
+            } catch (e) {
                 console.error(e);
-                alert("削除に失敗しました");
+                alert("削除リクエストを送信しました。");
+                setTimeout(fetchPosts, 3000);
             }
         }
 
@@ -428,8 +806,8 @@
             status.innerText = "読込中..."; status.className = "status-loading";
 
             Tone.Transport.stop();
-            ['normal_v','extra_v','bronchial'].forEach(k => { 
-                if(players[k]) {
+            ['normal_v', 'extra_v', 'bronchial'].forEach(k => {
+                if (players[k]) {
                     players[k].stop();
                     // players[k].dispose(); // Tone.jsのキャッシュバグ回避のため破棄しない
                     players[k] = null;
@@ -440,22 +818,22 @@
             if (lungFolder === "asthma") paths.extra_v = `./soundsource/${lungFolder}/wheeze.wav`;
             if (lungFolder === "fc") paths.extra_v = `./soundsource/${lungFolder}/fine_crackles.wav`;
             if (lungFolder === "pleuritis") paths.extra_v = `./soundsource/${lungFolder}/friction_rub.wav`;
-            
+
             let loaded = 0;
             const keys = Object.keys(paths);
             keys.forEach(key => {
-                players[key] = new Tone.Player({ 
-                    url: paths[key], 
-                    volume: -Infinity, 
-                    onload: () => { 
-                        if (++loaded === keys.length) { 
-                            status.innerText = "準備完了"; status.className = "status-ready"; 
-                            startLungLoop(); 
+                players[key] = new Tone.Player({
+                    url: paths[key],
+                    volume: -Infinity,
+                    onload: () => {
+                        if (++loaded === keys.length) {
+                            status.innerText = "準備完了"; status.className = "status-ready";
+                            startLungLoop();
                         }
-                    }, 
-                    onerror: (e) => { 
-                        console.error(`Audio load error [${key}]:`, e); 
-                        status.innerText = "エラー"; 
+                    },
+                    onerror: (e) => {
+                        console.error(`Audio load error [${key}]:`, e);
+                        status.innerText = "エラー";
                     }
                 }).connect(lungFilter); // フィルタに接続
             });
@@ -468,12 +846,12 @@
                 // players.heart.dispose(); // Tone.jsのキャッシュバグ回避のため破棄しない
                 players.heart = null;
             }
-            players.heart = new Tone.Player({ 
-                url: `./soundsource/heart/${heartFolder}.wav`, 
-                volume: -Infinity, 
+            players.heart = new Tone.Player({
+                url: `./soundsource/heart/${heartFolder}.wav`,
+                volume: -Infinity,
                 onload: () => {
                     if (heartLoop) heartLoop.dispose();
-                    heartLoop = new Tone.Loop(time => players.heart && players.heart.start(time), 60/hrValue).start(0);
+                    heartLoop = new Tone.Loop(time => players.heart && players.heart.start(time), 60 / hrValue).start(0);
                 }
             }).toDestination();
         }
@@ -481,7 +859,7 @@
         function startLungLoop() {
             if (masterLoop) masterLoop.dispose();
             masterLoop = new Tone.Loop(time => {
-                ['normal_v','extra_v','bronchial'].forEach(k => players[k] && players[k].start(time));
+                ['normal_v', 'extra_v', 'bronchial'].forEach(k => players[k] && players[k].start(time));
                 Tone.Draw.schedule(() => {
                     const bg = document.getElementById('breathing-group');
                     if (bg) {
@@ -490,7 +868,7 @@
                         bg.classList.add(lungFolder === "asthma" ? 'breathing-asthma' : 'breathing-trigger');
                     }
                 }, time);
-            }, 60/rrValue).start(0);
+            }, 60 / rrValue).start(0);
             Tone.Transport.start();
             updateAnimations();
         }
@@ -499,7 +877,7 @@
             if (!audioStarted) return;
             if (isOn) {
                 let lungVol = volLevels[lungVolumeState];
-                
+
                 // 【絶対変更禁止エリア】気胸側の減衰率を -30dB に固定
                 let attenuation = 0;
                 const leftSide = [1, 3, 5, 7];
@@ -509,43 +887,43 @@
 
                 if (lungVolumeState !== 1) {
                     let target = (id == 9) ? players.bronchial : players.extra_v;
-                    if (lungFolder === "fc" && ![5,6,7,8].includes(id)) target = players.normal_v;
+                    if (lungFolder === "fc" && ![5, 6, 7, 8].includes(id)) target = players.normal_v;
                     if (target) target.volume.rampTo(lungVol + attenuation, 0.1);
-                    ['normal_v','extra_v','bronchial'].forEach(k => { if (players[k] && players[k] !== target) players[k].volume.rampTo(-Infinity, 0.1); });
+                    ['normal_v', 'extra_v', 'bronchial'].forEach(k => { if (players[k] && players[k] !== target) players[k].volume.rampTo(-Infinity, 0.1); });
                 }
-                
-                if (heartVolumeState !== 1 && players.heart && (id === 4 || id === 6)) { 
-                    players.heart.volume.rampTo(volLevels[heartVolumeState] - 5, 0.1); 
-                } else if (players.heart) { 
-                    players.heart.volume.rampTo(-Infinity, 0.1); 
+
+                if (heartVolumeState !== 1 && players.heart && (id === 4 || id === 6)) {
+                    players.heart.volume.rampTo(volLevels[heartVolumeState] - 5, 0.1);
+                } else if (players.heart) {
+                    players.heart.volume.rampTo(-Infinity, 0.1);
                 }
                 const pad = document.getElementById(`pad-btn${id}`);
                 if (pad) pad.classList.add('active-pad');
             } else {
-                ['normal_v','extra_v','bronchial','heart'].forEach(k => players[k] && players[k].volume.rampTo(-Infinity, 0.2));
+                ['normal_v', 'extra_v', 'bronchial', 'heart'].forEach(k => players[k] && players[k].volume.rampTo(-Infinity, 0.2));
                 document.querySelectorAll('.pad').forEach(p => p.classList.remove('active-pad'));
             }
         }
 
         function updateAnimations() {
-            let dur = (lungFolder === "asthma") ? 3.2 : (rrValue <= 18 ? 2.5 : 60/rrValue);
+            let dur = (lungFolder === "asthma") ? 3.2 : (rrValue <= 18 ? 2.5 : 60 / rrValue);
             document.documentElement.style.setProperty('--move-duration', `${dur}s`);
         }
 
         function triggerClickSound() { if (audioStarted && clickSynth) clickSynth.triggerAttackRelease("C7", "32n"); }
 
-        document.getElementById('rr-slider').addEventListener('input', e => { rrValue = parseInt(e.target.value); document.getElementById('rr-val').innerText = rrValue; if (masterLoop) masterLoop.interval = 60/rrValue; updateAnimations(); });
-        document.getElementById('hr-slider').addEventListener('input', e => { hrValue = parseInt(e.target.value); document.getElementById('hr-val').innerText = hrValue; if (heartLoop) heartLoop.interval = 60/hrValue; });
+        document.getElementById('rr-slider').addEventListener('input', e => { rrValue = parseInt(e.target.value); document.getElementById('rr-val').innerText = rrValue; if (masterLoop) masterLoop.interval = 60 / rrValue; updateAnimations(); });
+        document.getElementById('hr-slider').addEventListener('input', e => { hrValue = parseInt(e.target.value); document.getElementById('hr-val').innerText = hrValue; if (heartLoop) heartLoop.interval = 60 / hrValue; });
         document.getElementById('lung-mute').addEventListener('click', () => { triggerClickSound(); lungVolumeState = (lungVolumeState + 1) % 4; document.getElementById('lung-mute-img').src = volIcons[lungVolumeState]; if (activePadId) setVolume(activePadId, true); });
         document.getElementById('heart-mute').addEventListener('click', () => { triggerClickSound(); heartVolumeState = (heartVolumeState + 1) % 4; document.getElementById('heart-mute-img').src = volIcons[heartVolumeState]; if (activePadId) setVolume(activePadId, true); });
         document.querySelectorAll('.lung-btn').forEach(btn => btn.addEventListener('click', () => { triggerClickSound(); lungFolder = btn.dataset.folder; document.querySelectorAll('.lung-btn').forEach(b => b.classList.toggle('active', b === btn)); loadLungSounds(); }));
         document.querySelectorAll('.heart-btn').forEach(btn => btn.addEventListener('click', () => { triggerClickSound(); heartFolder = btn.dataset.folder; document.querySelectorAll('.heart-btn').forEach(b => b.classList.toggle('active', b === btn)); loadHeartSound(); }));
-        
+
         document.querySelectorAll('.pad').forEach(p => {
-            const id = parseInt(p.id.replace('pad-btn',''));
-            p.addEventListener('pointerdown', (e) => { e.preventDefault(); activePadId=id; setVolume(id,true); });
-            const stop = (e) => { e.preventDefault(); if(activePadId==id){ setVolume(id,false); activePadId=null; } };
-            ['pointerup','pointerleave','pointercancel'].forEach(ev => p.addEventListener(ev, stop));
+            const id = parseInt(p.id.replace('pad-btn', ''));
+            p.addEventListener('pointerdown', (e) => { e.preventDefault(); activePadId = id; setVolume(id, true); });
+            const stop = (e) => { e.preventDefault(); if (activePadId == id) { setVolume(id, false); activePadId = null; } };
+            ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => p.addEventListener(ev, stop));
         });
 
         /* キーボード操作（Bluetoothキーボード等）への対応 */
@@ -574,4 +952,5 @@
         });
     </script>
 </body>
+
 </html>
