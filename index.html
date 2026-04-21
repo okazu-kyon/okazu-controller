@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="オカズコントローラー">
 
-    <title>オカズコントローラー Ver 4.9.0</title>
+    <title>オカズコントローラー Ver 4.9.1</title>
     <style>
         * {
             -webkit-touch-callout: none !important;
@@ -254,8 +254,11 @@
 
     <div id="bbs-view" class="view-container hidden">
         <div class="bbs-header">
-            <h3>💬 フィードバック</h3>
-            <button class="back-btn" onclick="switchView('main')">操作に戻る</button>
+            <h3>💬 掲示板</h3>
+            <div style="display:flex; gap:8px;">
+                <button class="back-btn" style="background:#f0f0f0; color:#666;" onclick="fetchPosts()">更新</button>
+                <button class="back-btn" onclick="switchView('main')">戻る</button>
+            </div>
         </div>
         <div class="bbs-form">
             <input type="text" id="bbs-name" placeholder="名前 (任意)" maxlength="20">
@@ -266,7 +269,7 @@
             <div id="bbs-list"></div>
             <button class="admin-toggle" onclick="toggleAdminMode()">🔧</button>
         </div>
-        <div id="footer-ver">オカズコントローラー Ver 4.9.0</div>
+        <div id="footer-ver">オカズコントローラー Ver 4.9.1</div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
@@ -336,10 +339,16 @@
 
         async function fetchPosts() {
             try {
-                const res = await fetch(GAS_URL);
+                // キャッシュを回避するために URL にタイムスタンプを付与
+                const cacheBustUrl = GAS_URL + (GAS_URL.indexOf('?') > -1 ? '&' : '?') + "_=" + new Date().getTime();
+                const res = await fetch(cacheBustUrl);
                 postsData = await res.json();
                 renderPosts();
-            } catch (e) { console.error(e); }
+            } catch (e) {
+                console.error("Fetch error:", e);
+                // 読み込み中表示を消すためのフォールバック
+                if(postsData.length === 0) renderPosts();
+            }
         }
 
         function renderPosts() {
@@ -380,8 +389,10 @@
                 });
                 
                 msgEl.value = '';
-                alert("送信しました！反映には少し時間がかかります。");
-                setTimeout(fetchPosts, 2000); // 反映待ちして再取得
+                alert("送信しました！反映されない場合は数秒待って「更新」を押してください。");
+                // 3秒後と6秒後に自動で再取得を試みる（GASの反映待ち）
+                setTimeout(fetchPosts, 3000);
+                setTimeout(fetchPosts, 6000);
             } catch (e) {
                 console.error(e);
                 alert("送信に失敗しました");
